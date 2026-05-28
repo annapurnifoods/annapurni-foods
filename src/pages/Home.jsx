@@ -275,6 +275,14 @@ const Home = () => {
         <div className="hero-bg-pattern"></div>
         <div className="hero-arch"></div>
         <div className="hero-arch2"></div>
+
+        {/* Traditional Lady Logo Image — placed first so it appears above text on mobile */}
+        <div className="hero-illustration">
+          <div className="hero-logo-frame">
+            <div className="hero-logo-image"></div>
+          </div>
+        </div>
+
         <div className="hero-content">
           <div className="hero-badge">🏠 Home-Cooked Tradition</div>
           <p className="hero-tagline-top">Since Paatti's Kitchen</p>
@@ -290,13 +298,6 @@ const Home = () => {
             <div className="stat-item"><div className="stat-num">{activeProducts.length}+</div><div className="stat-label">Varieties</div></div>
             <div className="stat-item"><div className="stat-num">100%</div><div className="stat-label">Homemade</div></div>
             <div className="stat-item"><div className="stat-num">{settings.isOpen ? 'OPEN' : 'CLOSED'}</div><div className="stat-label">Status</div></div>
-          </div>
-        </div>
-
-        {/* Traditional Lady Logo Image */}
-        <div className="hero-illustration">
-          <div className="hero-logo-frame">
-            <div className="hero-logo-image"></div>
           </div>
         </div>
       </section>

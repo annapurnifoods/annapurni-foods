@@ -39,7 +39,7 @@ nav::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;backg
 .nav-cta:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(201,134,10,.6)}
 
 /* ── HERO ── */
-.hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;padding:6rem 2.5rem 4rem;background:var(--forest)}
+.hero{min-height:clamp(550px, 100vh, 850px);display:flex;align-items:center;position:relative;overflow:hidden;padding:6rem 2.5rem 4rem;background:var(--forest);flex-wrap:wrap}
 /* arch / label background */
 .hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:min(700px,100%);height:100%;background:var(--cream);clip-path:ellipse(50% 52% at 50% 48%);opacity:.06;pointer-events:none}
 .hero-bg-pattern{position:absolute;inset:0;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23FEFAE0' fill-opacity='1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/svg%3E")}
@@ -68,7 +68,7 @@ nav::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;backg
 .stat-label{font-size:.72rem;color:rgba(254,250,224,.55);font-weight:600;letter-spacing:.08em;text-transform:uppercase}
 
 /* illustrated lady side */
-.hero-illustration{position:absolute;right:5%;top:50%;transform:translateY(-50%);width:min(380px,38%);z-index:1;animation:floatIll 5s ease-in-out infinite}
+.hero-illustration{position:absolute;right:5%;top:50%;transform:translateY(-50%);width:min(380px,38%);z-index:1;animation:floatIll 5s ease-in-out infinite;transition:all 0.8s cubic-bezier(0.25, 1, 0.5, 1)}
 @keyframes floatIll{0%,100%{transform:translateY(-50%)}50%{transform:translateY(-53%)}}
 .hero-ill-svg{width:100%;height:auto}
 
@@ -337,18 +337,76 @@ footer .footer-copy{font-size:.78rem;color:rgba(254,250,224,.35);margin-top:1rem
 }
 
 /* ── RESPONSIVE ── */
+@keyframes floatLogoMobile {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
 @media(max-width:900px){
   .about-grid,.why-inner,.contact-grid{grid-template-columns:1fr}
-  .hero-illustration{display:none}
+  .hero {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 5.5rem 1.5rem 3rem;
+  }
+  .hero-illustration {
+    position: relative;
+    right: auto;
+    top: auto;
+    transform: none;
+    width: min(200px, 50vw);
+    height: min(200px, 50vw);
+    margin-bottom: 1.5rem;
+    z-index: 1;
+    opacity: 1;
+    pointer-events: none;
+    animation: floatLogoMobile 5s ease-in-out infinite;
+  }
+  .hero-logo-frame {
+    width: 100%;
+    height: 100%;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  }
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .hero-desc {
+    text-align: center;
+  }
+  .hero-actions {
+    justify-content: center;
+  }
+  .hero-stats {
+    justify-content: center;
+  }
+  .hero-rule {
+    justify-content: center;
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
   nav{padding:.8rem 1.2rem}
   .nav-links{display:none}
   .why-cards{grid-template-columns:1fr}
 }
 @media(max-width:600px){
-  .hero{padding:5rem 1.2rem 3rem}
+  .hero{padding:5rem 1rem 2.5rem}
+  .hero-illustration {
+    width: min(160px, 45vw);
+    height: min(160px, 45vw);
+    margin-bottom: 1rem;
+  }
   section{padding:3.5rem 1.2rem}
   .products-header{flex-direction:column;align-items:flex-start}
   .hero-stats{gap:1.2rem}
+  .hero-title{font-size:clamp(2rem,8vw,2.8rem)}
 }
 
 /* ── SHOPPING CART FAB & DRAWER ── */
@@ -1178,5 +1236,12 @@ footer .footer-copy{font-size:.78rem;color:rgba(254,250,224,.35);margin-top:1rem
   }
 }
 
-
-
+/* ── MOBILE LOGO FLOAT ANIMATION ── */
+@keyframes floatLogoMobile {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.03);
+  }
+}
