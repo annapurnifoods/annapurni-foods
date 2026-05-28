@@ -1,0 +1,673 @@
+import React, { useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ProductContext } from '../context/ProductContext';
+
+const AdminDashboard = () => {
+  const {
+    products,
+    settings,
+    token,
+    orders,
+    logs,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    updateSettings,
+    updateOrder,
+    addLog,
+    uploadImage,
+    logout
+  } = useContext(ProductContext);
+  const navigate = useNavigate();
+
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'products', 'orders', 'logs', 'settings'
+  const [uploading, setUploading] = useState(false);
+
+  // Products state
+  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '', category: 'Thokku', price: '', weight: '250g', badge: '', image: '', desc: '', isAvailable: true
+  });
+
+  // Settings state
+  const [settingsData, setSettingsData] = useState({
+    whatsappNumber: '', address: '', heroText: '', heroTagline: '', isOpen: true,
+    instagram: '', facebook: '', youtube: '',
+    makingVideoUrl: '', makingImage1: '', makingImage2: '', makingImage3: ''
+  });
+
+  // Selected Order for Details Popup Modal
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  
+  // Custom manual log state
+  const [manualLog, setManualLog] = useState({ action: '', details: '' });
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/admin/login');
+    }
+  }, [token, navigate]);
+
+  useEffect(() => {
+    if (settings) {
+      setSettingsData(settings);
+    }
+  }, [settings]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  // --- IMAGE UPLOAD HANDLER ---
+  const handleImageFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      setFormData((prev) => ({ ...prev, image: url }));
+      alert('Image uploaded successfully! Path has been set.');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setFormData({ ...formData, [e.target.name]: value });
+  };
+
+  const handleSettingsChange = (e) => {
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setSettingsData({ ...settingsData, [e.target.name]: value });
+  };
+
+  const saveSettings = (e) => {
+    e.preventDefault();
+    updateSettings(settingsData);
+    alert('Settings updated successfully!');
+  };
+
+  const handleProductSubmit = (e) => {
+    e.preventDefault();
+    if (editingId) {
+      updateProduct({ ...formData, id: editingId });
+      setEditingId(null);
+    } else {
+      addProduct(formData);
+    }
+    setFormData({ name: '', category: 'Thokku', price: '', weight: '250g', badge: '', image: '', desc: '', isAvailable: true });
+  };
+
+  const editProduct = (product) => {
+    setEditingId(product.id);
+    setFormData({
+      ...product,
+      isAvailable: product.isAvailable !== false
+    });
+    setActiveTab('products'); // auto focus to products section
+  };
+
+  // --- MANUAL LOG SUBMIT ---
+  const handleManualLogSubmit = async (e) => {
+    e.preventDefault();
+    if (!manualLog.action || !manualLog.details) return;
+    const success = await addLog(manualLog.action, manualLog.details);
+    if (success) {
+      setManualLog({ action: '', details: '' });
+      alert('Manual operational log recorded successfully!');
+    }
+  };
+
+  // --- INVOICE/BILL TEXT GENERATOR ---
+  const generateBillText = (order) => {
+    if (!order) return '';
+    let itemsText = '';
+    order.items.forEach((item, index) => {
+      itemsText += `\n${index + 1}. ${item.name} (${item.weight}) x ${item.quantity} - ₹${item.price * item.quantity}`;
+    });
+
+    return `==============================\n` +
+      `       ANNAPURNI FOODS       \n` +
+      `   Tambaram, Chennai, 600073  \n` +
+      `==============================\n` +
+      `Bill Receipt: ${order.id}\n` +
+      `Customer: ${order.customerName}\n` +
+      `Phone: ${order.customerPhone}\n` +
+      `Date: ${new Date(order.createdAt).toLocaleDateString()}\n` +
+      `------------------------------\n` +
+      `Items Ordered: ${itemsText}\n` +
+      `------------------------------\n` +
+      `Total Paid: ₹${order.totalAmount}\n` +
+      `Order Status: Completed (Fulfilled)\n` +
+      `==============================\n` +
+      `Your order has been completed and dispatched! Thank you for ordering traditional homemade love. 🌿🍚`;
+  };
+
+  const sendBillToWhatsApp = (order) => {
+    const bill = generateBillText(order);
+    const encodedBill = encodeURIComponent(bill);
+    const cleanPhone = order.customerPhone.replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/${cleanPhone}?text=${encodedBill}`, '_blank');
+  };
+
+  if (!token) return null;
+
+  // --- CALCULATE SALES DASHBOARD METRICS ---
+  const completedOrders = orders.filter((o) => o.status === 'Completed');
+  const pendingOrdersCount = orders.filter((o) => o.status === 'Pending').length;
+  
+  const totalRevenue = completedOrders.reduce((total, o) => total + o.totalAmount, 0);
+  const totalOrdersCount = orders.length;
+  const avgOrderValue = completedOrders.length > 0 ? Math.round(totalRevenue / completedOrders.length) : 0;
+
+  // Calculate Product Sales ranking
+  const productSalesMap = {};
+  completedOrders.forEach((o) => {
+    o.items.forEach((item) => {
+      productSalesMap[item.name] = (productSalesMap[item.name] || 0) + item.quantity;
+    });
+  });
+  const topProducts = Object.entries(productSalesMap)
+    .map(([name, qty]) => ({ name, qty }))
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 5);
+
+  return (
+    <div className="admin-layout">
+      {/* SIDEBAR */}
+      <div className="admin-sidebar">
+        <div className="admin-sidebar-brand">
+          <img src="/images/annapurni-brand-logo.jpg" alt="Logo" />
+          <span>Annapurni Admin</span>
+        </div>
+        <ul className="admin-sidebar-nav">
+          <li className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+            📊 Dashboard
+          </li>
+          <li className={`admin-nav-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
+            📋 Orders {pendingOrdersCount > 0 && <span style={{background: 'var(--gold)', color: 'var(--dark)', fontSize: '0.75rem', fontWeight: 800, padding: '0.15rem 0.4rem', borderRadius: '50%', marginLeft: 'auto'}}>{pendingOrdersCount}</span>}
+          </li>
+          <li className={`admin-nav-item ${activeTab === 'products' ? 'active' : ''}`} onClick={() => setActiveTab('products')}>
+            🛍️ Products
+          </li>
+          <li className={`admin-nav-item ${activeTab === 'logs' ? 'active' : ''}`} onClick={() => setActiveTab('logs')}>
+            🪵 Activity Logs
+          </li>
+          <li className={`admin-nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+            ⚙️ Settings
+          </li>
+          <li className="admin-nav-item" style={{marginTop: 'auto', color: 'var(--gold-light)'}} onClick={handleLogout}>
+            🚪 Logout
+          </li>
+        </ul>
+      </div>
+
+      {/* MAIN CONTAINER */}
+      <div className="admin-main-content">
+        <div className="admin-header" style={{background: 'var(--forest)', borderBottom: 'none'}}>
+          <div className="admin-title" style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
+            <span style={{fontSize: '1.25rem'}}>🌾</span>
+            Annapurni Admin Dashboard
+          </div>
+          <div>
+            <button onClick={() => window.open('/', '_blank')} className="admin-btn" style={{marginRight: '1rem'}}>View Site</button>
+            <button onClick={handleLogout} className="admin-btn" style={{background: 'var(--maroon)'}}>Logout</button>
+          </div>
+        </div>
+
+        <div className="admin-content">
+          {/* TAB 1: DASHBOARD */}
+          {activeTab === 'dashboard' && (
+            <div>
+              {/* Stat Cards */}
+              <div className="stat-grid">
+                <div className="dashboard-stat-card revenue">
+                  <div className="stat-icon">💰</div>
+                  <div className="stat-info">
+                    <h4>Total Sales</h4>
+                    <div className="stat-value">₹{totalRevenue}</div>
+                  </div>
+                </div>
+                <div className="dashboard-stat-card">
+                  <div className="stat-icon">📦</div>
+                  <div className="stat-info">
+                    <h4>Total Orders</h4>
+                    <div className="stat-value">{totalOrdersCount}</div>
+                  </div>
+                </div>
+                <div className="dashboard-stat-card completed">
+                  <div className="stat-icon">✅</div>
+                  <div className="stat-info">
+                    <h4>Completed</h4>
+                    <div className="stat-value">{completedOrders.length}</div>
+                  </div>
+                </div>
+                <div className="dashboard-stat-card avg">
+                  <div className="stat-icon">📈</div>
+                  <div className="stat-info">
+                    <h4>Avg Ticket</h4>
+                    <div className="stat-value">₹{avgOrderValue}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid with tables */}
+              <div style={{display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem'}}>
+                {/* Pending Orders Summary */}
+                <div className="admin-card">
+                  <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Pending Approvals</h3>
+                  {orders.filter((o) => o.status === 'Pending').length === 0 ? (
+                    <p style={{color: 'var(--muted)', fontSize: '0.9rem'}}>No pending orders! High five! 🙌</p>
+                  ) : (
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Order ID</th>
+                          <th>Customer</th>
+                          <th>Total Amount</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orders.filter((o) => o.status === 'Pending').slice(0, 4).map((o) => (
+                          <tr key={o.id}>
+                            <td style={{fontWeight: 'bold', fontSize: '0.85rem'}}>{o.id}</td>
+                            <td>{o.customerName}</td>
+                            <td style={{color: 'var(--forest)', fontWeight: 'bold'}}>₹{o.totalAmount}</td>
+                            <td>
+                              <button onClick={() => setSelectedOrder(o)} className="action-btn btn-edit" style={{background: 'var(--forest)', color: 'white'}}>Manage</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                {/* Top Selling Products */}
+                <div className="admin-card">
+                  <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Top Sellers 🌾</h3>
+                  {topProducts.length === 0 ? (
+                    <p style={{color: 'var(--muted)', fontSize: '0.9rem'}}>No completed sales data yet.</p>
+                  ) : (
+                    <ul style={{listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
+                      {topProducts.map((p, idx) => (
+                        <li key={p.name} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px dashed rgba(0,0,0,0.06)'}}>
+                          <span style={{fontSize: '0.9rem', color: 'var(--text)'}}>
+                            <strong style={{color: 'var(--gold)', marginRight: '0.5rem'}}>#{idx + 1}</strong>
+                            {p.name}
+                          </span>
+                          <span style={{background: 'var(--forest)', color: 'var(--cream)', fontSize: '0.8rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '1rem'}}>
+                            {p.qty} Jars
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: ORDERS MANAGEMENT */}
+          {activeTab === 'orders' && (
+            <div className="admin-card">
+              <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Order Fulfillments</h3>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer Name</th>
+                    <th>WhatsApp/Phone</th>
+                    <th>Date</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.slice().reverse().map((o) => (
+                    <tr key={o.id}>
+                      <td style={{fontWeight: 'bold', fontSize: '0.85rem'}}>{o.id}</td>
+                      <td>{o.customerName}</td>
+                      <td>{o.customerPhone}</td>
+                      <td style={{fontSize: '0.85rem'}}>{new Date(o.createdAt).toLocaleDateString()}</td>
+                      <td style={{fontWeight: 'bold', color: 'var(--forest)'}}>₹{o.totalAmount}</td>
+                      <td>
+                        <span style={{
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '2rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 'bold',
+                          background: o.status === 'Completed' ? '#E8F5E9' : o.status === 'Cancelled' ? '#FFEBEE' : '#FFF8E1',
+                          color: o.status === 'Completed' ? '#2E7D32' : o.status === 'Cancelled' ? '#C62828' : '#F57F17'
+                        }}>
+                          {o.status}
+                        </span>
+                      </td>
+                      <td>
+                        <button onClick={() => setSelectedOrder(o)} className="action-btn btn-edit">Fulfill / Bill</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* TAB 3: PRODUCTS MANAGEMENT */}
+          {activeTab === 'products' && (
+            <div>
+              {/* Form card */}
+              <div className="admin-card" style={{marginBottom: '2rem'}}>
+                <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>{editingId ? 'Edit Product' : 'Add New Product'}</h3>
+                <form onSubmit={handleProductSubmit} style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+                  <div className="admin-form-group">
+                    <label>Product Name</label>
+                    <input type="text" name="name" className="admin-input" value={formData.name} onChange={handleInputChange} required />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Category</label>
+                    <select name="category" className="admin-input" value={formData.category} onChange={handleInputChange}>
+                      <option value="Thokku">Thokku</option>
+                      <option value="Podi">Podi</option>
+                      <option value="Pickles">Pickles</option>
+                      <option value="Combo Packs">Combo Packs</option>
+                    </select>
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Price (₹)</label>
+                    <input type="number" name="price" className="admin-input" value={formData.price} onChange={handleInputChange} required />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Weight (e.g. 250g)</label>
+                    <input type="text" name="weight" className="admin-input" value={formData.weight} onChange={handleInputChange} />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Badge (e.g. BESTSELLER, NEW)</label>
+                    <input type="text" name="badge" className="admin-input" value={formData.badge} onChange={handleInputChange} />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Availability</label>
+                    <div style={{marginTop: '0.5rem'}}>
+                      <input type="checkbox" name="isAvailable" checked={formData.isAvailable} onChange={handleInputChange} /> 
+                      <span style={{marginLeft: '0.5rem'}}>In Stock</span>
+                    </div>
+                  </div>
+                  <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
+                    <label>Description</label>
+                    <input type="text" name="desc" className="admin-input" value={formData.desc} onChange={handleInputChange} required />
+                  </div>
+
+                  {/* Dual Image Input with chosen File uploader */}
+                  <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
+                    <label>Product Image</label>
+                    <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+                      <input type="text" name="image" className="admin-input" placeholder="Static URL or Uploaded path" value={formData.image} onChange={handleInputChange} required />
+                      <div className="upload-btn-wrapper">
+                        <button type="button" className="admin-btn" style={{background: 'var(--maroon)'}}>
+                          {uploading ? 'Uploading...' : '📁 Choose File'}
+                        </button>
+                        <input type="file" name="file" accept="image/*" onChange={handleImageFileChange} disabled={uploading} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{gridColumn: '1 / -1'}}>
+                    <button type="submit" className="admin-btn">{editingId ? 'Update Product' : 'Add Product'}</button>
+                    {editingId && (
+                      <button type="button" onClick={() => { setEditingId(null); setFormData({ name: '', category: 'Thokku', price: '', weight: '250g', badge: '', image: '', desc: '', isAvailable: true }); }} className="admin-btn" style={{marginLeft: '1rem', background: 'gray'}}>
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              {/* Product List card */}
+              <div className="admin-card">
+                <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Manage Products</h3>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Image</th>
+                      <th>Name & Category</th>
+                      <th>Price & Weight</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((p) => (
+                      <tr key={p.id} style={{opacity: p.isAvailable === false ? 0.6 : 1}}>
+                        <td><img src={p.image} alt={p.name} style={{width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px', border: '1px solid rgba(0,0,0,0.06)'}} /></td>
+                        <td>
+                          <div style={{fontWeight: 'bold'}}>{p.name}</div>
+                          <div style={{fontSize: '0.8rem', color: 'var(--muted)'}}>{p.category}</div>
+                        </td>
+                        <td>
+                          <div>₹{p.price}</div>
+                          <div style={{fontSize: '0.8rem', color: 'var(--muted)'}}>{p.weight}</div>
+                        </td>
+                        <td>{p.isAvailable === false ? 'Out of Stock' : 'Active'}</td>
+                        <td>
+                          <button onClick={() => editProduct(p)} className="action-btn btn-edit">Edit</button>
+                          <button onClick={() => deleteProduct(p.id)} className="action-btn btn-delete">Delete</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: ACTIVITY LOGS */}
+          {activeTab === 'logs' && (
+            <div>
+              {/* Form to add custom operational log */}
+              <div className="admin-card" style={{marginBottom: '2rem'}}>
+                <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Record General Log Entry 🪵</h3>
+                <form onSubmit={handleManualLogSubmit} style={{display: 'flex', gap: '1rem', alignItems: 'flex-end'}}>
+                  <div className="admin-form-group" style={{flex: 1, marginBottom: 0}}>
+                    <label>Action/Topic</label>
+                    <input type="text" placeholder="e.g. Offline Payment, Cash count" className="admin-input" value={manualLog.action} onChange={(e) => setManualLog({ ...manualLog, action: e.target.value })} required />
+                  </div>
+                  <div className="admin-form-group" style={{flex: 2, marginBottom: 0}}>
+                    <label>Log Details</label>
+                    <input type="text" placeholder="Enter operational notes here..." className="admin-input" value={manualLog.details} onChange={(e) => setManualLog({ ...manualLog, details: e.target.value })} required />
+                  </div>
+                  <button type="submit" className="admin-btn" style={{height: '42px'}}>Record Log</button>
+                </form>
+              </div>
+
+              {/* Timeline Display */}
+              <div className="admin-card">
+                <h3 style={{color: 'var(--dark)'}}>Audit Activity Logs</h3>
+                <div className="log-timeline">
+                  {logs.map((log) => {
+                    const isManual = log.action.startsWith('[Manual]');
+                    const isOrder = log.action.includes('Order');
+                    
+                    let tagClass = 'system';
+                    if (isManual) tagClass = 'manual';
+                    else if (isOrder) tagClass = 'order';
+
+                    return (
+                      <div key={log.id} className="log-item">
+                        <div className="log-details-col">
+                          <div className="log-title-row">
+                            <span className={`log-tag ${tagClass}`}>{log.action}</span>
+                            <span className="log-desc">{log.details}</span>
+                          </div>
+                        </div>
+                        <span className="log-time">{new Date(log.timestamp).toLocaleString()}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: SETTINGS */}
+          {activeTab === 'settings' && (
+            <div className="admin-card">
+              <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Store Settings</h3>
+              <form onSubmit={saveSettings} style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+                <div className="admin-form-group">
+                  <label>WhatsApp Number</label>
+                  <input type="text" name="whatsappNumber" className="admin-input" value={settingsData.whatsappNumber} onChange={handleSettingsChange} required />
+                </div>
+                <div className="admin-form-group">
+                  <label>Hero Text</label>
+                  <input type="text" name="heroText" className="admin-input" value={settingsData.heroText} onChange={handleSettingsChange} />
+                </div>
+                <div className="admin-form-group">
+                  <label>Hero Tagline</label>
+                  <input type="text" name="heroTagline" className="admin-input" value={settingsData.heroTagline} onChange={handleSettingsChange} />
+                </div>
+                <div className="admin-form-group">
+                  <label>Store Open Status</label>
+                  <div style={{marginTop: '0.5rem'}}>
+                    <input type="checkbox" name="isOpen" checked={settingsData.isOpen} onChange={handleSettingsChange} /> 
+                    <span style={{marginLeft: '0.5rem'}}>{settingsData.isOpen ? 'Open Now' : 'Closed Temporarily'}</span>
+                  </div>
+                </div>
+                <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>Business Address</label>
+                  <input type="text" name="address" className="admin-input" value={settingsData.address} onChange={handleSettingsChange} />
+                </div>
+                <div className="admin-form-group">
+                  <label>Instagram URL</label>
+                  <input type="text" name="instagram" className="admin-input" placeholder="https://instagram.com/profile" value={settingsData.instagram || ''} onChange={handleSettingsChange} />
+                </div>
+                <div className="admin-form-group">
+                  <label>Facebook URL</label>
+                  <input type="text" name="facebook" className="admin-input" placeholder="https://facebook.com/page" value={settingsData.facebook || ''} onChange={handleSettingsChange} />
+                </div>
+                <div className="admin-form-group">
+                  <label>YouTube URL</label>
+                  <input type="text" name="youtube" className="admin-input" placeholder="https://youtube.com/channel" value={settingsData.youtube || ''} onChange={handleSettingsChange} />
+                </div>
+                <div style={{gridColumn: '1 / -1', borderTop: '1px dashed rgba(0,0,0,0.1)', paddingTop: '1.25rem', marginTop: '0.5rem'}}>
+                  <h4 style={{fontFamily: "'Playfair Display', serif", color: 'var(--forest)', marginBottom: '0.25rem'}}>🎬 Kitchen Video & Photo Gallery</h4>
+                  <p style={{fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem'}}>Showcase how you prepare your delicacies! Enter a YouTube video link and upload/paste up to three promotional photos.</p>
+                </div>
+                <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>YouTube Promo / Making Video Link</label>
+                  <input type="text" name="makingVideoUrl" className="admin-input" placeholder="e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ" value={settingsData.makingVideoUrl || ''} onChange={handleSettingsChange} />
+                </div>
+                <div className="admin-form-group">
+                  <label>Kitchen Photo 1 (Image URL/Path)</label>
+                  <input type="text" name="makingImage1" className="admin-input" placeholder="e.g. /images/making-1.png" value={settingsData.makingImage1 || ''} onChange={handleSettingsChange} />
+                </div>
+                <div className="admin-form-group">
+                  <label>Kitchen Photo 2 (Image URL/Path)</label>
+                  <input type="text" name="makingImage2" className="admin-input" placeholder="e.g. /images/making-2.png" value={settingsData.makingImage2 || ''} onChange={handleSettingsChange} />
+                </div>
+                <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>Kitchen Photo 3 (Image URL/Path)</label>
+                  <input type="text" name="makingImage3" className="admin-input" placeholder="e.g. /images/making-3.png" value={settingsData.makingImage3 || ''} onChange={handleSettingsChange} />
+                </div>
+                <div style={{gridColumn: '1 / -1'}}>
+                  <button type="submit" className="admin-btn">Save Settings</button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* --- INVOICE / BILL MODAL DYNAMIC POPUP --- */}
+      {selectedOrder && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <div className="modal-header">
+              <h3 style={{fontFamily: "'Playfair Display', serif", fontWeight: 900, color: 'var(--dark)'}}>Fulfill Order Details</h3>
+              <button onClick={() => setSelectedOrder(null)} style={{background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer'}}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              {/* Order Metadata */}
+              <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '1px dashed rgba(0,0,0,0.08)'}}>
+                <div>
+                  <strong style={{color: 'var(--forest)'}}>{selectedOrder.id}</strong>
+                  <div style={{fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.15rem'}}>{new Date(selectedOrder.createdAt).toLocaleString()}</div>
+                </div>
+                
+                {/* Status Dropdown */}
+                <div>
+                  <select
+                    className="admin-input"
+                    style={{padding: '0.3rem 0.5rem', fontSize: '0.85rem', width: 'auto'}}
+                    value={selectedOrder.status}
+                    onChange={(e) => {
+                      updateOrder(selectedOrder.id, { status: e.target.value });
+                      setSelectedOrder({ ...selectedOrder, status: e.target.value });
+                    }}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              <div style={{background: 'var(--warm-cream)', padding: '0.85rem', borderRadius: '4px', marginBottom: '1.25rem', border: '1px solid rgba(0,0,0,0.04)'}}>
+                <div style={{fontSize: '0.9rem', marginBottom: '0.3rem'}}>👤 <strong>Customer:</strong> {selectedOrder.customerName}</div>
+                <div style={{fontSize: '0.9rem', marginBottom: '0.3rem'}}>📱 <strong>Phone:</strong> {selectedOrder.customerPhone}</div>
+                <div style={{fontSize: '0.9rem'}}>📍 <strong>Delivery Address:</strong> {selectedOrder.customerAddress}</div>
+              </div>
+
+              {/* Items Table */}
+              <div style={{marginBottom: '1.5rem'}}>
+                <h4 style={{fontSize: '0.9rem', marginBottom: '0.5rem', borderBottom: '1px solid rgba(0,0,0,0.06)', paddingBottom: '0.2rem'}}>Ordered Items</h4>
+                <ul style={{listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                  {selectedOrder.items.map((item) => (
+                    <li key={item.productId} style={{display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem'}}>
+                      <span>{item.name} ({item.weight}) x {item.quantity}</span>
+                      <strong style={{color: 'var(--forest)'}}>₹{item.price * item.quantity}</strong>
+                    </li>
+                  ))}
+                  <li style={{display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '0.95rem', borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: '0.5rem', marginTop: '0.5rem'}}>
+                    <span>Grand Total:</span>
+                    <span style={{color: 'var(--maroon)'}}>₹{selectedOrder.totalAmount}</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* invoice display text box */}
+              <div>
+                <h4 style={{fontSize: '0.9rem', marginBottom: '0.5rem'}}>Formatted Bill Invoice (Text Receipt)</h4>
+                <textarea
+                  className="admin-input"
+                  style={{height: '140px', fontFamily: 'monospace', fontSize: '0.78rem', background: '#F9F9F9', color: '#333', lineHeight: '1.4', padding: '0.5rem'}}
+                  value={generateBillText(selectedOrder)}
+                  readOnly
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button onClick={() => setSelectedOrder(null)} className="admin-btn" style={{background: 'gray'}}>Close</button>
+              {selectedOrder.status === 'Completed' && (
+                <button onClick={() => sendBillToWhatsApp(selectedOrder)} className="admin-btn" style={{background: '#25D366'}}>
+                  💬 Send Bill to WhatsApp
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AdminDashboard;

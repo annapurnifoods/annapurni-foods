@@ -1,0 +1,289 @@
+{
+  "settings": {
+    "whatsappNumber": "+91 7200928023",
+    "address": "Ranganathan St, East Tambaram, Chennai, Tamil Nadu 600073",
+    "heroText": "Authentic Thokku & Pickles",
+    "heroTagline": "Soru Unnuthu, Thokku Enthu!",
+    "isOpen": true,
+    "instagram": "https://instagram.com/annapurnifoods",
+    "facebook": "https://facebook.com/annapurnifoods",
+    "youtube": "https://youtube.com/annapurnifoods"
+  },
+  "products": [
+    {
+      "id": "1",
+      "name": "Pudina Thokku",
+      "category": "Thokku",
+      "price": 179,
+      "weight": "300g",
+      "desc": "Aromatic mint chutney made fresh — bold, fragrant, and perfect with hot rice.",
+      "image": "/images/WhatsApp Image 2026-05-27 at 20.49.40.jpeg",
+      "badge": "BESTSELLER",
+      "isAvailable": true
+    },
+    {
+      "id": "2",
+      "name": "Gongura Thokku",
+      "category": "Thokku",
+      "price": 189,
+      "weight": "250g",
+      "desc": "Tangy sorrel leaf thokku — the signature Andhra flavour that pairs brilliantly with rice.",
+      "image": "/images/WhatsApp Image 2026-05-27 at 20.52.08 (1).jpeg",
+      "badge": "SPICY",
+      "isAvailable": true
+    },
+    {
+      "id": "3",
+      "name": "Puli Kaachal",
+      "category": "Thokku",
+      "price": 169,
+      "weight": "250g",
+      "desc": "Classic tamarind base concentrate — the soul of South Indian cooking.",
+      "image": "/images/WhatsApp Image 2026-05-27 at 20.52.08.jpeg",
+      "badge": "",
+      "isAvailable": true
+    },
+    {
+      "id": "4",
+      "name": "Thakkali Thokku",
+      "category": "Thokku",
+      "price": 159,
+      "weight": "250g",
+      "desc": "Slow-cooked tomato thokku with traditional spices — tangy, robust.",
+      "image": "/images/WhatsApp Image 2026-05-27 at 20.52.09 (1).jpeg",
+      "badge": "SAVE ₹31",
+      "isAvailable": true
+    },
+    {
+      "id": "5",
+      "name": "Inju Thokku",
+      "category": "Thokku",
+      "price": 179,
+      "weight": "250g",
+      "desc": "Ginger pickle made the traditional way — warming, digestive, comforting.",
+      "image": "/images/WhatsApp Image 2026-05-27 at 20.52.09 (2).jpeg",
+      "badge": "",
+      "isAvailable": true
+    },
+    {
+      "id": "6",
+      "name": "Nellika Chammanthi",
+      "category": "Thokku",
+      "price": 189,
+      "weight": "250g",
+      "desc": "Kerala-style gooseberry chutney — tart, nutritious, and packed with goodness.",
+      "image": "/images/WhatsApp Image 2026-05-27 at 20.52.09.jpeg",
+      "badge": "NEW",
+      "isAvailable": true
+    },
+    {
+      "id": "7",
+      "name": "Kothamalli Thuvaiyal",
+      "category": "Thokku",
+      "price": 199,
+      "weight": "250g",
+      "desc": "Home recipe coriander chutney — thick, aromatic, and perfect as a dip.",
+      "image": "/images/WhatsApp Image 2026-05-27 at 20.54.57 (1).jpeg",
+      "badge": "SAVE ₹31",
+      "isAvailable": true
+    },
+    {
+      "name": "Parupu Podi",
+      "category": "Podi",
+      "price": "199",
+      "weight": "200g",
+      "badge": "Parupu Podi",
+      "image": "/images/1779991564215-1.png",
+      "desc": "Paruppu Podi A traditional South Indian homemade lentil spice powder made with roasted dal, red chillies, garlic, and aromatic spices. Best enjoyed with hot rice and ghee. Rich in protein, flavorful, and perfect for a healthy homemade meal.  ✅ Homemade ✅ No Preservatives ✅ Traditional Taste ✅ Protein Rich",
+      "isAvailable": true,
+      "id": "1779989241294"
+    },
+    {
+      "name": "Ellu Podi",
+      "category": "Podi",
+      "price": "125",
+      "weight": "200g",
+      "badge": "BESTSELLER",
+      "image": "/images/1779994163878-2.png",
+      "desc": "Aromatic mint chutney made fresh — bold, fragrant, and perfect with hot rice.",
+      "isAvailable": true,
+      "id": "1779994166537"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-1779989000000",
+      "customerName": "Rajesh Kumar",
+      "customerPhone": "+919876543210",
+      "customerAddress": "12, Gandhi Street, East Tambaram, Chennai 600059",
+      "items": [
+        {
+          "productId": "1",
+          "name": "Pudina Thokku",
+          "price": 179,
+          "weight": "250g",
+          "quantity": 2
+        },
+        {
+          "productId": "2",
+          "name": "Gongura Thokku",
+          "price": 189,
+          "weight": "250g",
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 547,
+      "status": "Pending",
+      "createdAt": "2026-05-28T10:15:30.000Z"
+    },
+    {
+      "id": "ORD-1779989100000",
+      "customerName": "Suresh Kumar",
+      "customerPhone": "+918765432109",
+      "customerAddress": "45, Nehru Salai, Tambaram West, Chennai 600045",
+      "items": [
+        {
+          "productId": "4",
+          "name": "Thakkali Thokku",
+          "price": 159,
+          "weight": "250g",
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 159,
+      "status": "Completed",
+      "createdAt": "2026-05-28T11:20:00.000Z"
+    },
+    {
+      "customerName": "Raja",
+      "customerPhone": "+918667202236",
+      "customerAddress": "Chennai",
+      "items": [
+        {
+          "productId": "7",
+          "name": "Kothamalli Thuvaiyal",
+          "price": 199,
+          "weight": "250g",
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 199,
+      "id": "ORD-1779992435266",
+      "status": "Pending",
+      "createdAt": "2026-05-28T18:20:35.266Z"
+    },
+    {
+      "customerName": "Nila",
+      "customerPhone": "+918667232236",
+      "customerAddress": "Chrompet",
+      "items": [
+        {
+          "productId": "6",
+          "name": "Nellika Chammanthi",
+          "price": 189,
+          "weight": "250g",
+          "quantity": 1
+        },
+        {
+          "productId": "7",
+          "name": "Kothamalli Thuvaiyal",
+          "price": 199,
+          "weight": "250g",
+          "quantity": 1
+        },
+        {
+          "productId": "1779989241294",
+          "name": "Parupu Podi",
+          "price": 199,
+          "weight": "200g",
+          "quantity": 1
+        },
+        {
+          "productId": "1",
+          "name": "Pudina Thokku",
+          "price": 179,
+          "weight": "300g",
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 766,
+      "id": "ORD-1779993434660",
+      "status": "Pending",
+      "createdAt": "2026-05-28T18:37:14.660Z"
+    }
+  ],
+  "logs": [
+    {
+      "id": "LOG-1779994745798",
+      "action": "Admin Logged In",
+      "details": "Admin logged into the dashboard successfully.",
+      "timestamp": "2026-05-28T18:59:05.798Z"
+    },
+    {
+      "id": "LOG-1779994166539",
+      "action": "Product Added",
+      "details": "Admin added a new product: \"Ellu Podi\" (₹125).",
+      "timestamp": "2026-05-28T18:49:26.539Z"
+    },
+    {
+      "id": "LOG-1779994163880",
+      "action": "Image Uploaded",
+      "details": "Admin uploaded an image: 1779994163878-2.png",
+      "timestamp": "2026-05-28T18:49:23.880Z"
+    },
+    {
+      "id": "LOG-1779993434663",
+      "action": "Order Placed",
+      "details": "New order ORD-1779993434660 placed by Nila for ₹766.",
+      "timestamp": "2026-05-28T18:37:14.663Z"
+    },
+    {
+      "id": "LOG-1779992435267",
+      "action": "Order Placed",
+      "details": "New order ORD-1779992435266 placed by Raja for ₹199.",
+      "timestamp": "2026-05-28T18:20:35.267Z"
+    },
+    {
+      "id": "LOG-1779992378156",
+      "action": "Admin Logged In",
+      "details": "Admin logged into the dashboard successfully.",
+      "timestamp": "2026-05-28T18:19:38.156Z"
+    },
+    {
+      "id": "LOG-1779991961812",
+      "action": "Admin Logged In",
+      "details": "Admin logged into the dashboard successfully.",
+      "timestamp": "2026-05-28T18:12:41.812Z"
+    },
+    {
+      "id": "LOG-1779991570472",
+      "action": "Product Updated",
+      "details": "Admin updated product details for: \"Parupu Podi\" (ID: 1779989241294).",
+      "timestamp": "2026-05-28T18:06:10.472Z"
+    },
+    {
+      "id": "LOG-1779991564217",
+      "action": "Image Uploaded",
+      "details": "Admin uploaded an image: 1779991564215-1.png",
+      "timestamp": "2026-05-28T18:06:04.217Z"
+    },
+    {
+      "id": "LOG-1779991538500",
+      "action": "Product Updated",
+      "details": "Admin updated product details for: \"Pudina Thokku\" (ID: 1).",
+      "timestamp": "2026-05-28T18:05:38.500Z"
+    },
+    {
+      "id": "LOG-1779989000000",
+      "action": "Order Placed",
+      "details": "Order ORD-1779989000000 was placed by Rajesh Kumar for ₹547.",
+      "timestamp": "2026-05-28T10:15:30.000Z"
+    },
+    {
+      "id": "LOG-1779989100000",
+      "action": "Order Completed",
+      "details": "Order ORD-1779989100000 was marked as COMPLETED by Admin.",
+      "timestamp": "2026-05-28T11:45:00.000Z"
+    }
+  ]
+}
