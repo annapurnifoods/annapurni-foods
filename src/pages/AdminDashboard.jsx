@@ -257,7 +257,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Grid with tables */}
-              <div style={{display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem'}}>
+              <div className="admin-dashboard-grid">
                 {/* Pending Orders Summary */}
                 <div className="admin-card">
                   <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Pending Approvals</h3>
@@ -366,7 +366,7 @@ const AdminDashboard = () => {
               {/* Form card */}
               <div className="admin-card" style={{marginBottom: '2rem'}}>
                 <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>{editingId ? 'Edit Product' : 'Add New Product'}</h3>
-                <form onSubmit={handleProductSubmit} style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+                <form onSubmit={handleProductSubmit} className="admin-form-grid">
                   <div className="admin-form-group">
                     <label>Product Name</label>
                     <input type="text" name="name" className="admin-input" value={formData.name} onChange={handleInputChange} required />
@@ -473,7 +473,7 @@ const AdminDashboard = () => {
               {/* Form to add custom operational log */}
               <div className="admin-card" style={{marginBottom: '2rem'}}>
                 <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Record General Log Entry 🪵</h3>
-                <form onSubmit={handleManualLogSubmit} style={{display: 'flex', gap: '1rem', alignItems: 'flex-end'}}>
+                <form onSubmit={handleManualLogSubmit} className="admin-log-form">
                   <div className="admin-form-group" style={{flex: 1, marginBottom: 0}}>
                     <label>Action/Topic</label>
                     <input type="text" placeholder="e.g. Offline Payment, Cash count" className="admin-input" value={manualLog.action} onChange={(e) => setManualLog({ ...manualLog, action: e.target.value })} required />
@@ -519,7 +519,7 @@ const AdminDashboard = () => {
           {activeTab === 'settings' && (
             <div className="admin-card">
               <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Store Settings</h3>
-              <form onSubmit={saveSettings} style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+              <form onSubmit={saveSettings} className="admin-form-grid">
                 <div className="admin-form-group">
                   <label>WhatsApp Number</label>
                   <input type="text" name="whatsappNumber" className="admin-input" value={settingsData.whatsappNumber} onChange={handleSettingsChange} required />

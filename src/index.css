@@ -223,6 +223,8 @@ footer .footer-copy{font-size:.78rem;color:rgba(254,250,224,.35);margin-top:1rem
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   border: 1px solid rgba(0,0,0,0.05);
+  overflow-x: auto;
+  max-width: 100%;
 }
 .admin-form-group {
   margin-bottom: 1rem;
@@ -599,6 +601,21 @@ footer .footer-copy{font-size:.78rem;color:rgba(254,250,224,.35);margin-top:1rem
   background: var(--warm-cream);
   overflow-y: auto;
 }
+.admin-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1.5rem;
+}
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.admin-log-form {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+}
 
 /* ── SALES DASHBOARD ── */
 .stat-grid {
@@ -767,6 +784,12 @@ footer .footer-copy{font-size:.78rem;color:rgba(254,250,224,.35);margin-top:1rem
   cursor: pointer;
 }
 
+@media(max-width: 991px) {
+  .admin-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media(max-width: 768px) {
   .admin-layout {
     flex-direction: column;
@@ -781,6 +804,7 @@ footer .footer-copy{font-size:.78rem;color:rgba(254,250,224,.35);margin-top:1rem
     padding: 0.5rem;
     overflow-x: auto;
     white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
   }
   .admin-nav-item {
     padding: 0.75rem 1rem;
@@ -789,6 +813,47 @@ footer .footer-copy{font-size:.78rem;color:rgba(254,250,224,.35);margin-top:1rem
   }
   .admin-nav-item.active {
     border-bottom-color: var(--gold);
+  }
+  .admin-content {
+    padding: 1rem;
+  }
+  .admin-card {
+    padding: 1.25rem 1rem;
+  }
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-log-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .admin-log-form button {
+    height: auto !important;
+    padding: 0.75rem;
+  }
+  .admin-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-header {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+  }
+  .admin-header button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  .admin-header button:last-child {
+    margin-bottom: 0;
+  }
+  .modal-box {
+    margin: 1rem;
+    max-height: 85vh;
   }
 }
 
