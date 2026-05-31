@@ -215,11 +215,25 @@ export const ProductProvider = ({ children }) => {
     });
   };
 
+  const resetDashboard = async () => {
+    const res = await fetch(`${API_URL}/reset`, {
+      method: 'DELETE',
+      headers: authHeaders
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setOrders(data.orders);
+      setLogs(data.logs);
+      return true;
+    }
+    return false;
+  };
+
   return (
     <ProductContext.Provider value={{
       products, settings, token, orders, logs,
       login, logout, addProduct, updateProduct, deleteProduct, updateSettings,
-      createOrder, updateOrder, addLog, uploadImage
+      createOrder, updateOrder, addLog, uploadImage, resetDashboard
     }}>
       {children}
     </ProductContext.Provider>

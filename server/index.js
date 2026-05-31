@@ -220,6 +220,17 @@ app.post('/api/logs', authenticateToken, (req, res) => {
   res.status(201).json(db.logs[0]);
 });
 
+// DELETE Reset Dashboard (Clear orders and logs)
+app.delete('/api/reset', authenticateToken, (req, res) => {
+  const db = readDB();
+  db.orders = [];
+  db.logs = [];
+  writeDB(db);
+  addSystemLog('Dashboard Reset', 'Admin reset the dashboard. Cleared all orders and logs.');
+  const updatedDb = readDB(); // To get the log we just added
+  res.json({ logs: updatedDb.logs, orders: updatedDb.orders });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Backend server running on http://localhost:${PORT}`);

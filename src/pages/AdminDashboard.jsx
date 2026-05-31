@@ -16,7 +16,8 @@ const AdminDashboard = () => {
     updateOrder,
     addLog,
     uploadImage,
-    logout
+    logout,
+    resetDashboard
   } = useContext(ProductContext);
   const navigate = useNavigate();
 
@@ -57,6 +58,17 @@ const AdminDashboard = () => {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleResetDashboard = async () => {
+    if (window.confirm("Are you sure you want to reset the dashboard? This will permanently delete all orders and logs!")) {
+      const success = await resetDashboard();
+      if (success) {
+        alert("Dashboard has been reset successfully.");
+      } else {
+        alert("Failed to reset dashboard.");
+      }
+    }
   };
 
   // --- IMAGE UPLOAD HANDLER ---
@@ -575,8 +587,14 @@ const AdminDashboard = () => {
                   <label>Kitchen Photo 3 (Image URL/Path)</label>
                   <input type="text" name="makingImage3" className="admin-input" placeholder="e.g. /images/making-3.png" value={settingsData.makingImage3 || ''} onChange={handleSettingsChange} />
                 </div>
-                <div style={{gridColumn: '1 / -1'}}>
+                <div style={{gridColumn: '1 / -1', marginTop: '0.5rem'}}>
                   <button type="submit" className="admin-btn">Save Settings</button>
+                </div>
+                
+                <div style={{gridColumn: '1 / -1', borderTop: '1px dashed rgba(255,0,0,0.3)', paddingTop: '1.25rem', marginTop: '1.5rem'}}>
+                  <h4 style={{fontFamily: "'Playfair Display', serif", color: 'var(--maroon)', marginBottom: '0.25rem'}}>⚠️ Danger Zone</h4>
+                  <p style={{fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem'}}>This action will permanently delete all orders and activity logs from the system.</p>
+                  <button type="button" onClick={handleResetDashboard} className="admin-btn" style={{background: 'var(--maroon)'}}>Reset Dashboard (Delete Data)</button>
                 </div>
               </form>
             </div>
