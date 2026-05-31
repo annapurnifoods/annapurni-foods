@@ -261,9 +261,33 @@ const AdminDashboard = () => {
     window.open(`https://wa.me/${cleanPhone}?text=${encodedBill}`, '_blank');
   };
 
-  const handleDownloadInvoice = (order) => {
+  const handleDownloadInvoice = async (order) => {
     if (!order) return;
     const doc = new jsPDF();
+
+    // Helper to load image
+    const loadImage = (url) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = url;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/jpeg'));
+        };
+        img.onerror = () => resolve(null);
+      });
+    };
+
+    const logo1 = await loadImage('/images/annapurni-brand-logo.jpg');
+    const logo2 = await loadImage('/images/murugan-logo.jpg');
+
+    if (logo1) doc.addImage(logo1, 'JPEG', 14, 10, 30, 30);
+    if (logo2) doc.addImage(logo2, 'JPEG', 166, 10, 30, 30);
     
     // Brand/Header
     doc.setFontSize(22);
