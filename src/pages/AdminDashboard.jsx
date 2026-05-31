@@ -1,6 +1,8 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProductContext } from '../context/ProductContext';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const AdminDashboard = () => {
   const {
@@ -109,6 +111,60 @@ const AdminDashboard = () => {
     document.body.removeChild(a);
   };
 
+  const handleDownloadWeeklyReport = () => {
+    const doc = new jsPDF();
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    const weeklyOrders = orders.filter(o => new Date(o.createdAt) >= oneWeekAgo && o.status === 'Completed');
+    const weeklyRevenue = weeklyOrders.reduce((total, o) => total + o.totalAmount, 0);
+
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(34, 139, 34);
+    doc.text("ANNAPURNI FOODS", 105, 20, { align: "center" });
+    
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Weekly Sales Report", 105, 30, { align: "center" });
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 36, { align: "center" });
+    
+    doc.setLineWidth(0.5);
+    doc.line(14, 42, 196, 42);
+
+    // Summary Stats
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Total Completed Orders (Last 7 Days): ${weeklyOrders.length}`, 14, 52);
+    doc.text(`Total Revenue (Last 7 Days): Rs. ${weeklyRevenue}`, 14, 59);
+
+    // Orders table
+    const tableColumn = ["Order ID", "Date", "Customer", "Amount"];
+    const tableRows = [];
+
+    weeklyOrders.forEach(order => {
+      tableRows.push([
+        order.id,
+        new Date(order.createdAt).toLocaleDateString(),
+        order.customerName,
+        `Rs. ${order.totalAmount}`
+      ]);
+    });
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 65,
+      theme: 'striped',
+      headStyles: { fillColor: [34, 139, 34] }
+    });
+
+    doc.save(`Annapurni_Weekly_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageFileChange = async (e) => {
     const file = e.target.files[0];
@@ -205,6 +261,68 @@ const AdminDashboard = () => {
     window.open(`https://wa.me/${cleanPhone}?text=${encodedBill}`, '_blank');
   };
 
+  const handleDownloadInvoice = (order) => {
+    if (!order) return;
+    const doc = new jsPDF();
+    
+    // Brand/Header
+    doc.setFontSize(22);
+    doc.setTextColor(34, 139, 34); // Forest Green
+    doc.text("ANNAPURNI FOODS", 105, 20, { align: "center" });
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Traditional Homemade Love", 105, 27, { align: "center" });
+    doc.text("Tambaram, Chennai, Tamil Nadu - 600073", 105, 33, { align: "center" });
+    doc.text(`WhatsApp: ${settingsData?.adminWhatsApp || '9876543210'}`, 105, 39, { align: "center" });
+    
+    doc.setLineWidth(0.5);
+    doc.line(14, 45, 196, 45);
+
+    // Order details
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Invoice ID: ${order.id}`, 14, 55);
+    doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 62);
+    
+    doc.text(`Customer Name: ${order.customerName}`, 120, 55);
+    doc.text(`Phone: ${order.customerPhone}`, 120, 62);
+
+    // Items table
+    const tableColumn = ["Item", "Weight", "Qty", "Price", "Total"];
+    const tableRows = [];
+
+    order.items.forEach(item => {
+      tableRows.push([
+        item.name,
+        item.weight,
+        item.quantity,
+        `Rs. ${item.price}`,
+        `Rs. ${item.price * item.quantity}`
+      ]);
+    });
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 70,
+      theme: 'grid',
+      headStyles: { fillColor: [34, 139, 34] }
+    });
+
+    // Total Amount
+    const finalY = doc.lastAutoTable.finalY || 70;
+    doc.setFontSize(14);
+    doc.text(`Grand Total: Rs. ${order.totalAmount}`, 14, finalY + 15);
+    
+    // Footer message
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Thank you for shopping with Annapurni Foods!", 105, finalY + 30, { align: "center" });
+    
+    doc.save(`Annapurni_Invoice_${order.id}.pdf`);
+  };
+
   if (!token) return null;
 
   // --- CALCULATE SALES DASHBOARD METRICS ---
@@ -277,7 +395,8 @@ const AdminDashboard = () => {
             Annapurni Admin Dashboard
           </div>
           <div>
-            <button onClick={handleExportRecords} className="admin-btn" style={{marginRight: '1rem', background: 'var(--gold-light)', color: 'var(--dark)'}}>💾 Save Records</button>
+            <button onClick={handleDownloadWeeklyReport} className="admin-btn" style={{marginRight: '1rem', background: 'var(--forest-light)', color: 'white'}}>📄 Weekly Report (PDF)</button>
+            <button onClick={handleExportRecords} className="admin-btn" style={{marginRight: '1rem', background: 'var(--gold-light)', color: 'var(--dark)'}}>💾 Save All (CSV)</button>
             <button onClick={() => window.open('/', '_blank')} className="admin-btn" style={{marginRight: '1rem'}}>View Site</button>
             <button onClick={handleLogout} className="admin-btn" style={{background: 'var(--maroon)'}}>Logout</button>
           </div>
@@ -731,9 +850,14 @@ const AdminDashboard = () => {
             <div className="modal-footer">
               <button onClick={() => setSelectedOrder(null)} className="admin-btn" style={{background: 'gray'}}>Close</button>
               {selectedOrder.status === 'Completed' && (
-                <button onClick={() => sendBillToWhatsApp(selectedOrder)} className="admin-btn" style={{background: '#25D366'}}>
-                  💬 Send Bill to WhatsApp
-                </button>
+                <>
+                  <button onClick={() => handleDownloadInvoice(selectedOrder)} className="admin-btn" style={{background: 'var(--gold)', color: 'var(--dark)'}}>
+                    📄 Download PDF Invoice
+                  </button>
+                  <button onClick={() => sendBillToWhatsApp(selectedOrder)} className="admin-btn" style={{background: '#25D366'}}>
+                    💬 Send Bill to WhatsApp
+                  </button>
+                </>
               )}
             </div>
           </div>
