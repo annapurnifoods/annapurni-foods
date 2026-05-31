@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProductContext } from '../context/ProductContext';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const AdminDashboard = () => {
   const {
@@ -154,7 +154,7 @@ const AdminDashboard = () => {
       ]);
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 65,
@@ -302,7 +302,7 @@ const AdminDashboard = () => {
       ]);
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 70,
