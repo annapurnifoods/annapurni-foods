@@ -255,7 +255,12 @@ const AdminDashboard = () => {
   };
 
   const sendBillToWhatsApp = (order) => {
-    const bill = generateBillText(order);
+    const upiId = settingsData?.upiId || 'yourname@upi'; // Default if not set
+    const upiLink = `upi://pay?pa=${upiId}&pn=Annapurni%20Foods&am=${order.totalAmount}&cu=INR`;
+    const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(upiLink)}&size=300&margin=2`;
+
+    const bill = generateBillText(order) + `\n\n💳 *Payment Details*\nPlease pay ₹${order.totalAmount} using UPI.\nClick the link below to view and scan the QR code:\n${qrUrl}`;
+    
     const encodedBill = encodeURIComponent(bill);
     const cleanPhone = order.customerPhone.replace(/[^0-9]/g, '');
     window.open(`https://wa.me/${cleanPhone}?text=${encodedBill}`, '_blank');
@@ -745,9 +750,13 @@ const AdminDashboard = () => {
                 <div className="admin-form-group">
                   <label>Store Open Status</label>
                   <div style={{marginTop: '0.5rem'}}>
-                    <input type="checkbox" name="isOpen" checked={settingsData.isOpen} onChange={handleSettingsChange} /> 
-                    <span style={{marginLeft: '0.5rem'}}>{settingsData.isOpen ? 'Open Now' : 'Closed Temporarily'}</span>
+                    <input type="checkbox" name="isOpen" checked={settingsData.isOpen || false} onChange={handleSettingsChange} /> 
+                    <span style={{marginLeft: '0.5rem'}}>{settingsData.isOpen ? 'Store is OPEN' : 'Store is CLOSED'}</span>
                   </div>
+                </div>
+                <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>UPI ID (For WhatsApp Payment QR)</label>
+                  <input type="text" name="upiId" className="admin-input" placeholder="e.g. annapurni@okhdfcbank" value={settingsData.upiId || ''} onChange={handleSettingsChange} />
                 </div>
                 <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
                   <label>Business Address</label>
