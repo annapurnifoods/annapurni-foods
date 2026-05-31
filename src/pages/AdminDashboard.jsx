@@ -255,7 +255,7 @@ const AdminDashboard = () => {
   };
 
   const sendBillToWhatsApp = (order) => {
-    const upiId = settingsData?.upiId || 'yourname@upi'; // Default if not set
+    const upiId = settingsData?.upiId || 'lakshmimano1987-2@okaxis'; // Default if not set
     const upiLink = `upi://pay?pa=${upiId}&pn=Annapurni%20Foods&am=${order.totalAmount}&cu=INR`;
     const dynamicQr = `https://quickchart.io/qr?text=${encodeURIComponent(upiLink)}&size=300&margin=2`;
     
@@ -352,7 +352,7 @@ const AdminDashboard = () => {
     doc.text(`Grand Total: Rs. ${order.totalAmount}`, 14, finalY + 15);
     
     // Add UPI QR Code Image
-    const upiId = settingsData?.upiId || 'lakshmimano1987-1@oksbi';
+    const upiId = settingsData?.upiId || 'lakshmimano1987-2@okaxis';
     const upiLink = `upi://pay?pa=${upiId}&pn=Annapurni%20Foods&am=${order.totalAmount}&cu=INR`;
     const dynamicQrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(upiLink)}&size=150&margin=1`;
     
