@@ -255,9 +255,12 @@ const AdminDashboard = () => {
   };
 
   const sendBillToWhatsApp = (order) => {
-    const upiId = settingsData?.upiId || 'yourname@upi'; // Default if not set
+    const upiId = settingsData?.upiId || 'lakshmimano1987-1@oksbi'; // Default if not set
     const upiLink = `upi://pay?pa=${upiId}&pn=Annapurni%20Foods&am=${order.totalAmount}&cu=INR`;
-    const dynamicQr = `https://quickchart.io/qr?text=${encodeURIComponent(upiLink)}&size=300&margin=2`;
+    
+    // QuickChart with GPay-style G logo in the center
+    const gLogo = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png';
+    const dynamicQr = `https://quickchart.io/qr?text=${encodeURIComponent(upiLink)}&size=300&margin=2&centerImageUrl=${encodeURIComponent(gLogo)}`;
     
     let qrUrl = settingsData?.paymentQrImage ? settingsData.paymentQrImage : dynamicQr;
     if (qrUrl.startsWith('/')) {
@@ -763,7 +766,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
                   <label>UPI ID (For Dynamic WhatsApp Payment QR)</label>
-                  <input type="text" name="upiId" className="admin-input" placeholder="e.g. annapurni@okhdfcbank" value={settingsData.upiId || ''} onChange={handleSettingsChange} />
+                  <input type="text" name="upiId" className="admin-input" placeholder="e.g. lakshmimano1987-1@oksbi" value={settingsData.upiId || ''} onChange={handleSettingsChange} />
                 </div>
                 <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
                   <label>Custom Payment QR Image URL (Overrides Dynamic QR)</label>
