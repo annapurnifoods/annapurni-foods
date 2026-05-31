@@ -255,12 +255,9 @@ const AdminDashboard = () => {
   };
 
   const sendBillToWhatsApp = (order) => {
-    const upiId = settingsData?.upiId || 'lakshmimano1987-1@oksbi'; // Default if not set
+    const upiId = settingsData?.upiId || 'yourname@upi'; // Default if not set
     const upiLink = `upi://pay?pa=${upiId}&pn=Annapurni%20Foods&am=${order.totalAmount}&cu=INR`;
-    
-    // QuickChart with GPay-style G logo in the center
-    const gLogo = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png';
-    const dynamicQr = `https://quickchart.io/qr?text=${encodeURIComponent(upiLink)}&size=300&margin=2&centerImageUrl=${encodeURIComponent(gLogo)}`;
+    const dynamicQr = `https://quickchart.io/qr?text=${encodeURIComponent(upiLink)}&size=300&margin=2`;
     
     let qrUrl = settingsData?.paymentQrImage ? settingsData.paymentQrImage : dynamicQr;
     if (qrUrl.startsWith('/')) {
@@ -354,10 +351,32 @@ const AdminDashboard = () => {
     doc.setFontSize(14);
     doc.text(`Grand Total: Rs. ${order.totalAmount}`, 14, finalY + 15);
     
+    // Add UPI QR Code Image
+    const upiId = settingsData?.upiId || 'lakshmimano1987-1@oksbi';
+    const upiLink = `upi://pay?pa=${upiId}&pn=Annapurni%20Foods&am=${order.totalAmount}&cu=INR`;
+    const dynamicQrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(upiLink)}&size=150&margin=1`;
+    
+    // If they provided a custom QR image, use that. Otherwise use dynamic one.
+    let qrUrlToLoad = settingsData?.paymentQrImage ? settingsData.paymentQrImage : dynamicQrUrl;
+    if (qrUrlToLoad.startsWith('/')) {
+      qrUrlToLoad = window.location.origin + qrUrlToLoad;
+    }
+
+    const qrImgData = await loadImage(qrUrlToLoad);
+    let footerY = finalY + 30;
+
+    if (qrImgData) {
+      doc.addImage(qrImgData, 'JPEG', 80, finalY + 20, 50, 50);
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Scan to Pay", 105, finalY + 75, { align: "center" });
+      footerY = finalY + 85;
+    }
+    
     // Footer message
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    doc.text("Thank you for shopping with Annapurni Foods!", 105, finalY + 30, { align: "center" });
+    doc.text("Thank you for shopping with Annapurni Foods!", 105, footerY, { align: "center" });
     
     doc.save(`Annapurni_Invoice_${order.id}.pdf`);
   };
@@ -766,7 +785,7 @@ const AdminDashboard = () => {
                 </div>
                 <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
                   <label>UPI ID (For Dynamic WhatsApp Payment QR)</label>
-                  <input type="text" name="upiId" className="admin-input" placeholder="e.g. lakshmimano1987-1@oksbi" value={settingsData.upiId || ''} onChange={handleSettingsChange} />
+                  <input type="text" name="upiId" className="admin-input" placeholder="e.g. annapurni@okhdfcbank" value={settingsData.upiId || ''} onChange={handleSettingsChange} />
                 </div>
                 <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
                   <label>Custom Payment QR Image URL (Overrides Dynamic QR)</label>
