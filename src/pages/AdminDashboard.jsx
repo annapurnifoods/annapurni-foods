@@ -71,6 +71,15 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleResetMetric = async (metricKey) => {
+    if (window.confirm(`Are you sure you want to reset the ${metricKey} counter to 0? This hides past metrics here but won't delete actual orders.`)) {
+      const now = new Date().toISOString();
+      const newSettings = { ...settingsData, [`reset_${metricKey}_date`]: now };
+      await updateSettings(newSettings);
+      setSettingsData(newSettings);
+    }
+  };
+
   const handleExportRecords = () => {
     if (!orders || orders.length === 0) {
       alert("No records to export.");
@@ -202,9 +211,21 @@ const AdminDashboard = () => {
   const completedOrders = orders.filter((o) => o.status === 'Completed');
   const pendingOrdersCount = orders.filter((o) => o.status === 'Pending').length;
   
-  const totalRevenue = completedOrders.reduce((total, o) => total + o.totalAmount, 0);
-  const totalOrdersCount = orders.length;
-  const avgOrderValue = completedOrders.length > 0 ? Math.round(totalRevenue / completedOrders.length) : 0;
+  const getResetTime = (key) => settingsData?.[`reset_${key}_date`] ? new Date(settingsData[`reset_${key}_date`]).getTime() : 0;
+
+  const revResetTime = getResetTime('revenue');
+  const revOrders = completedOrders.filter(o => new Date(o.createdAt).getTime() > revResetTime);
+  const totalRevenue = revOrders.reduce((total, o) => total + o.totalAmount, 0);
+
+  const ordResetTime = getResetTime('orders');
+  const totalOrdersCount = orders.filter(o => new Date(o.createdAt).getTime() > ordResetTime).length;
+
+  const compResetTime = getResetTime('completed');
+  const completedCount = completedOrders.filter(o => new Date(o.createdAt).getTime() > compResetTime).length;
+
+  const avgResetTime = getResetTime('avg');
+  const avgOrders = completedOrders.filter(o => new Date(o.createdAt).getTime() > avgResetTime);
+  const avgOrderValue = avgOrders.length > 0 ? Math.round(avgOrders.reduce((t, o) => t + o.totalAmount, 0) / avgOrders.length) : 0;
 
   // Calculate Product Sales ranking
   const productSalesMap = {};
@@ -269,7 +290,7 @@ const AdminDashboard = () => {
               {/* Stat Cards */}
               <div className="stat-grid">
                 <div className="dashboard-stat-card revenue">
-                  <button onClick={handleResetDashboard} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Dashboard">🔄</button>
+                  <button onClick={() => handleResetMetric('revenue')} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Revenue">🔄</button>
                   <div className="stat-icon">💰</div>
                   <div className="stat-info">
                     <h4>Total Sales</h4>
@@ -277,7 +298,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="dashboard-stat-card">
-                  <button onClick={handleResetDashboard} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Dashboard">🔄</button>
+                  <button onClick={() => handleResetMetric('orders')} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Orders Count">🔄</button>
                   <div className="stat-icon">📦</div>
                   <div className="stat-info">
                     <h4>Total Orders</h4>
@@ -285,15 +306,15 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="dashboard-stat-card completed">
-                  <button onClick={handleResetDashboard} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Dashboard">🔄</button>
+                  <button onClick={() => handleResetMetric('completed')} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Completed Count">🔄</button>
                   <div className="stat-icon">✅</div>
                   <div className="stat-info">
                     <h4>Completed</h4>
-                    <div className="stat-value">{completedOrders.length}</div>
+                    <div className="stat-value">{completedCount}</div>
                   </div>
                 </div>
                 <div className="dashboard-stat-card avg">
-                  <button onClick={handleResetDashboard} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Dashboard">🔄</button>
+                  <button onClick={() => handleResetMetric('avg')} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Avg Ticket">🔄</button>
                   <div className="stat-icon">📈</div>
                   <div className="stat-info">
                     <h4>Avg Ticket</h4>
