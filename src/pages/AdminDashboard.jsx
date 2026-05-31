@@ -288,8 +288,10 @@ const AdminDashboard = () => {
       });
     };
 
+    const rightLogoPath = settingsData?.invoiceRightLogo || '/images/murugan-logo.jpg';
+    
     const logo1 = await loadImage('/images/annapurni-brand-logo.jpg');
-    const logo2 = await loadImage('/images/murugan-logo.jpg');
+    const logo2 = await loadImage(rightLogoPath);
 
     if (logo1) doc.addImage(logo1, 'JPEG', 14, 10, 30, 30);
     if (logo2) doc.addImage(logo2, 'JPEG', 166, 10, 30, 30);
@@ -773,6 +775,13 @@ const AdminDashboard = () => {
                 <div className="admin-form-group">
                   <label>YouTube URL</label>
                   <input type="text" name="youtube" className="admin-input" placeholder="https://youtube.com/channel" value={settingsData.youtube || ''} onChange={handleSettingsChange} />
+                </div>
+                <div style={{gridColumn: '1 / -1', borderTop: '1px dashed rgba(0,0,0,0.1)', paddingTop: '1.25rem', marginTop: '0.5rem'}}>
+                  <h4 style={{fontFamily: "'Playfair Display', serif", color: 'var(--forest)', marginBottom: '0.25rem'}}>📄 PDF Invoice Branding</h4>
+                </div>
+                <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>Right-Side Logo (URL or Path for Murugan photo)</label>
+                  <input type="text" name="invoiceRightLogo" className="admin-input" placeholder="e.g. https://example.com/murugan.jpg OR /images/murugan-logo.jpg" value={settingsData.invoiceRightLogo || ''} onChange={handleSettingsChange} />
                 </div>
                 <div style={{gridColumn: '1 / -1', borderTop: '1px dashed rgba(0,0,0,0.1)', paddingTop: '1.25rem', marginTop: '0.5rem'}}>
                   <h4 style={{fontFamily: "'Playfair Display', serif", color: 'var(--forest)', marginBottom: '0.25rem'}}>🎬 Kitchen Video & Photo Gallery</h4>
