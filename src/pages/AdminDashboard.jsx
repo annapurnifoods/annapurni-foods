@@ -71,6 +71,35 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleExportRecords = () => {
+    if (!orders || orders.length === 0) {
+      alert("No records to export.");
+      return;
+    }
+    const csvRows = [];
+    csvRows.push(['Order ID', 'Customer Name', 'Phone', 'Date', 'Total Amount', 'Status'].join(','));
+    orders.forEach(order => {
+      csvRows.push([
+        order.id,
+        `"${order.customerName}"`,
+        `"${order.customerPhone}"`,
+        new Date(order.createdAt).toLocaleDateString(),
+        order.totalAmount,
+        order.status
+      ].join(','));
+    });
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'annapurni_orders.csv');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   // --- IMAGE UPLOAD HANDLER ---
   const handleImageFileChange = async (e) => {
     const file = e.target.files[0];
@@ -227,6 +256,7 @@ const AdminDashboard = () => {
             Annapurni Admin Dashboard
           </div>
           <div>
+            <button onClick={handleExportRecords} className="admin-btn" style={{marginRight: '1rem', background: 'var(--gold-light)', color: 'var(--dark)'}}>💾 Save Records</button>
             <button onClick={() => window.open('/', '_blank')} className="admin-btn" style={{marginRight: '1rem'}}>View Site</button>
             <button onClick={handleLogout} className="admin-btn" style={{background: 'var(--maroon)'}}>Logout</button>
           </div>
@@ -239,6 +269,7 @@ const AdminDashboard = () => {
               {/* Stat Cards */}
               <div className="stat-grid">
                 <div className="dashboard-stat-card revenue">
+                  <button onClick={handleResetDashboard} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Dashboard">🔄</button>
                   <div className="stat-icon">💰</div>
                   <div className="stat-info">
                     <h4>Total Sales</h4>
@@ -246,6 +277,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="dashboard-stat-card">
+                  <button onClick={handleResetDashboard} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Dashboard">🔄</button>
                   <div className="stat-icon">📦</div>
                   <div className="stat-info">
                     <h4>Total Orders</h4>
@@ -253,6 +285,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="dashboard-stat-card completed">
+                  <button onClick={handleResetDashboard} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Dashboard">🔄</button>
                   <div className="stat-icon">✅</div>
                   <div className="stat-info">
                     <h4>Completed</h4>
@@ -260,6 +293,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="dashboard-stat-card avg">
+                  <button onClick={handleResetDashboard} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Dashboard">🔄</button>
                   <div className="stat-icon">📈</div>
                   <div className="stat-info">
                     <h4>Avg Ticket</h4>
