@@ -165,6 +165,12 @@ const Home = () => {
   const handleCheckout = async (e) => {
     e.preventDefault();
     if (cart.length === 0) return;
+
+    if (checkoutData.phone.length < 13) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
     setLoading(true);
 
     const total = getCartTotal();
@@ -720,15 +726,15 @@ const Home = () => {
               <form onSubmit={handleCheckout} className="checkout-form">
                 <h4>Checkout Details</h4>
                 <div className="admin-form-group">
-                  <label style={{fontSize: '0.8rem'}}>Your Name</label>
+                  <label style={{fontSize: '0.8rem'}}>Your Name <span style={{color: 'red'}}>*</span></label>
                   <input type="text" name="name" className="admin-input" style={{padding: '0.5rem'}} value={checkoutData.name} onChange={handleCheckoutChange} autoComplete="name" required />
                 </div>
                 <div className="admin-form-group">
-                  <label style={{fontSize: '0.8rem'}}>Phone / WhatsApp Number</label>
-                  <input type="tel" name="phone" className="admin-input" style={{padding: '0.5rem'}} placeholder="+91..." value={checkoutData.phone} onChange={handlePhoneChange} autoComplete="tel" required />
+                  <label style={{fontSize: '0.8rem'}}>Phone / WhatsApp Number <span style={{color: 'red'}}>*</span></label>
+                  <input type="tel" name="phone" className="admin-input" style={{padding: '0.5rem'}} placeholder="+91..." value={checkoutData.phone} onChange={handlePhoneChange} autoComplete="tel" required minLength="13" maxLength="13" />
                 </div>
                 <div className="admin-form-group">
-                  <label style={{fontSize: '0.8rem'}}>Delivery Address</label>
+                  <label style={{fontSize: '0.8rem'}}>Delivery Address <span style={{color: 'red'}}>*</span></label>
                   <textarea name="address" className="admin-input" style={{padding: '0.5rem', resize: 'vertical', height: '60px'}} value={checkoutData.address} onChange={handleCheckoutChange} autoComplete="street-address" required></textarea>
                 </div>
                 <button type="submit" className="btn-primary" style={{width: '100%', marginTop: '1rem', border: 'none'}} disabled={loading}>
