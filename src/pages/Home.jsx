@@ -102,10 +102,10 @@ const Home = () => {
       }
     });
 
-    // Delay slide out drawer until particle landing animation has completed
-    setTimeout(() => {
-      setIsCartOpen(true);
-    }, 900);
+    // Do not auto-open the cart drawer to allow uninterrupted shopping
+    // setTimeout(() => {
+    //   setIsCartOpen(true);
+    // }, 900);
   };
 
   const removeFromCart = (productId) => {
