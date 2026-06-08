@@ -1245,3 +1245,111 @@ footer .footer-copy{font-size:.78rem;color:rgba(254,250,224,.35);margin-top:1rem
     transform: translateY(-8px) scale(1.03);
   }
 }
+
+/* --- FULL SCREEN CART ANIMATION --- */
+.cart-anim-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(254, 250, 224, 0.95);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInOut 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  backdrop-filter: blur(5px);
+}
+
+.cart-anim-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.cart-anim-icon {
+  font-size: 5rem;
+  animation: bounceCart 1.2s ease-in-out;
+  position: relative;
+  z-index: 2;
+}
+
+.cart-anim-product {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--gold);
+  position: absolute;
+  top: -60px;
+  z-index: 1;
+  animation: dropInCart 1.2s ease-in-out forwards;
+}
+
+.cart-anim-text {
+  font-family: 'Playfair Display', serif;
+  color: var(--forest);
+  font-size: 1.8rem;
+  font-weight: 800;
+  opacity: 0;
+  margin-top: 1rem;
+  text-align: center;
+  animation: slideUpFade 0.5s 0.3s forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes bounceCart {
+  0% { transform: translateY(50px) scale(0.8); }
+  20% { transform: translateY(0) scale(1.1); }
+  40% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes dropInCart {
+  0% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
+  30% { transform: translateY(-20px) scale(1); opacity: 1; }
+  50% { transform: translateY(20px) scale(0.5); opacity: 0; }
+  100% { transform: translateY(20px) scale(0); opacity: 0; }
+}
+
+@keyframes slideUpFade {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* --- BUTTON HIGHLIGHT ANIMATION --- */
+.highlight-anim {
+  animation: pulse-highlight 2s infinite cubic-bezier(0.66, 0, 0, 1);
+  box-shadow: 0 0 0 0 rgba(186, 151, 91, 0.7);
+  position: relative;
+  overflow: hidden;
+}
+
+.highlight-anim::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite linear;
+}
+
+@keyframes pulse-highlight {
+  0% { box-shadow: 0 0 0 0 rgba(186, 151, 91, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(186, 151, 91, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(186, 151, 91, 0); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}

@@ -44,6 +44,52 @@ const AdminDashboard = () => {
   
   // Custom manual log state
   const [manualLog, setManualLog] = useState({ action: '', details: '' });
+  
+  // Reviews state
+  const [reviewForm, setReviewForm] = useState({ name: '', location: '', stars: 5, text: '' });
+  const [editingReviewIndex, setEditingReviewIndex] = useState(null);
+
+  const parsedReviews = (() => {
+    try {
+      return settingsData?.reviewsData ? JSON.parse(settingsData.reviewsData) : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    const newReviews = [...parsedReviews];
+    if (editingReviewIndex !== null) {
+      newReviews[editingReviewIndex] = reviewForm;
+      setEditingReviewIndex(null);
+    } else {
+      newReviews.push(reviewForm);
+    }
+    const updatedSettings = { ...settingsData, reviewsData: JSON.stringify(newReviews) };
+    setSettingsData(updatedSettings);
+    await updateSettings(updatedSettings);
+    setReviewForm({ name: '', location: '', stars: 5, text: '' });
+  };
+
+  const editReview = (index) => {
+    setEditingReviewIndex(index);
+    setReviewForm(parsedReviews[index]);
+  };
+
+  const deleteReview = async (index) => {
+    if (window.confirm('Delete this review?')) {
+      const newReviews = parsedReviews.filter((_, i) => i !== index);
+      const updatedSettings = { ...settingsData, reviewsData: JSON.stringify(newReviews) };
+      setSettingsData(updatedSettings);
+      await updateSettings(updatedSettings);
+    }
+  };
+  
+  // Log filtering states
+  const [logFilterAction, setLogFilterAction] = useState('');
+  const [logFilterDate, setLogFilterDate] = useState('');
+  const [logSearchQuery, setLogSearchQuery] = useState('');
 
   useEffect(() => {
     if (!token) {
@@ -174,6 +220,22 @@ const AdminDashboard = () => {
       const url = await uploadImage(file);
       setFormData((prev) => ({ ...prev, image: url }));
       alert('Image uploaded successfully! Path has been set.');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSettingsImageUpload = async (e, fieldName) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      setSettingsData((prev) => ({ ...prev, [fieldName]: url }));
+      alert('Image uploaded successfully!');
     } catch (err) {
       console.error(err);
       alert('Failed to upload image. Please try again.');
@@ -415,6 +477,10 @@ const AdminDashboard = () => {
     .sort((a, b) => b.qty - a.qty)
     .slice(0, 5);
 
+  // Compute Last 1 Week Orders
+  const oneWeekAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const lastWeekOrdersList = orders.filter(o => new Date(o.createdAt).getTime() >= oneWeekAgoMs).slice().reverse();
+
   return (
     <div className="admin-layout">
       {/* SIDEBAR */}
@@ -435,6 +501,9 @@ const AdminDashboard = () => {
           </li>
           <li className={`admin-nav-item ${activeTab === 'logs' ? 'active' : ''}`} onClick={() => setActiveTab('logs')}>
             🪵 Activity Logs
+          </li>
+          <li className={`admin-nav-item ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>
+            ⭐ Reviews
           </li>
           <li className={`admin-nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
             ⚙️ Settings
@@ -494,7 +563,7 @@ const AdminDashboard = () => {
                   <button onClick={() => handleResetMetric('avg')} style={{position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--maroon)', fontSize: '1rem'}} title="Reset Avg Ticket">🔄</button>
                   <div className="stat-icon">📈</div>
                   <div className="stat-info">
-                    <h4>Avg Ticket</h4>
+                    <h4>AVG SALES</h4>
                     <div className="stat-value">₹{avgOrderValue}</div>
                   </div>
                 </div>
@@ -560,48 +629,92 @@ const AdminDashboard = () => {
 
           {/* TAB 2: ORDERS MANAGEMENT */}
           {activeTab === 'orders' && (
-            <div className="admin-card">
-              <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Order Fulfillments</h3>
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Order ID</th>
-                    <th>Customer Name</th>
-                    <th>WhatsApp/Phone</th>
-                    <th>Date</th>
-                    <th>Total Amount</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.slice().reverse().map((o) => (
-                    <tr key={o.id}>
-                      <td style={{fontWeight: 'bold', fontSize: '0.85rem'}}>{o.id}</td>
-                      <td>{o.customerName}</td>
-                      <td>{o.customerPhone}</td>
-                      <td style={{fontSize: '0.85rem'}}>{new Date(o.createdAt).toLocaleDateString()}</td>
-                      <td style={{fontWeight: 'bold', color: 'var(--forest)'}}>₹{o.totalAmount}</td>
-                      <td>
-                        <span style={{
-                          padding: '0.2rem 0.6rem',
-                          borderRadius: '2rem',
-                          fontSize: '0.75rem',
-                          fontWeight: 'bold',
-                          background: o.status === 'Completed' ? '#E8F5E9' : o.status === 'Cancelled' ? '#FFEBEE' : '#FFF8E1',
-                          color: o.status === 'Completed' ? '#2E7D32' : o.status === 'Cancelled' ? '#C62828' : '#F57F17'
-                        }}>
-                          {o.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button onClick={() => setSelectedOrder(o)} className="action-btn btn-edit">Fulfill / Bill</button>
-                      </td>
+            <>
+              <div className="admin-card">
+                <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Order Fulfillments</h3>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Customer Name</th>
+                      <th>WhatsApp/Phone</th>
+                      <th>Date</th>
+                      <th>Total Amount</th>
+                      <th>Status</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {orders.slice().reverse().map((o) => (
+                      <tr key={o.id}>
+                        <td style={{fontWeight: 'bold', fontSize: '0.85rem'}}>{o.id}</td>
+                        <td>{o.customerName}</td>
+                        <td>{o.customerPhone}</td>
+                        <td style={{fontSize: '0.85rem'}}>{new Date(o.createdAt).toLocaleDateString()}</td>
+                        <td style={{fontWeight: 'bold', color: 'var(--forest)'}}>₹{o.totalAmount}</td>
+                        <td>
+                          <span style={{
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '2rem',
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            background: o.status === 'Completed' ? '#E8F5E9' : o.status === 'Cancelled' ? '#FFEBEE' : '#FFF8E1',
+                            color: o.status === 'Completed' ? '#2E7D32' : o.status === 'Cancelled' ? '#C62828' : '#F57F17'
+                          }}>
+                            {o.status}
+                          </span>
+                        </td>
+                        <td>
+                          <button onClick={() => setSelectedOrder(o)} className="action-btn btn-edit">Fulfill / Bill</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Last 1 Week Orders */}
+              <div className="admin-card" style={{marginTop: '2rem'}}>
+                <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Last 1 Week Orders History</h3>
+                {lastWeekOrdersList.length === 0 ? (
+                  <p style={{color: 'var(--muted)', fontSize: '0.9rem'}}>No orders in the last 7 days.</p>
+                ) : (
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Order ID</th>
+                        <th>Customer Name</th>
+                        <th>Date</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lastWeekOrdersList.map((o) => (
+                        <tr key={o.id}>
+                          <td style={{fontWeight: 'bold', fontSize: '0.85rem'}}>{o.id}</td>
+                          <td>{o.customerName}</td>
+                          <td style={{fontSize: '0.85rem'}}>{new Date(o.createdAt).toLocaleDateString()}</td>
+                          <td style={{fontWeight: 'bold', color: 'var(--forest)'}}>₹{o.totalAmount}</td>
+                          <td>
+                            <span style={{
+                              padding: '0.2rem 0.6rem',
+                              borderRadius: '2rem',
+                              fontSize: '0.75rem',
+                              fontWeight: 'bold',
+                              background: o.status === 'Completed' ? '#E8F5E9' : o.status === 'Cancelled' ? '#FFEBEE' : '#FFF8E1',
+                              color: o.status === 'Completed' ? '#2E7D32' : o.status === 'Cancelled' ? '#C62828' : '#F57F17'
+                            }}>
+                              {o.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </>
           )}
 
           {/* TAB 3: PRODUCTS MANAGEMENT */}
@@ -701,7 +814,7 @@ const AdminDashboard = () => {
                         <td>{p.isAvailable === false ? 'Out of Stock' : 'Active'}</td>
                         <td>
                           <button onClick={() => editProduct(p)} className="action-btn btn-edit">Edit</button>
-                          <button onClick={() => deleteProduct(p.id)} className="action-btn btn-delete">Delete</button>
+                          <button onClick={() => deleteProduct(p.id)} className="action-btn btn-delete" style={{background: 'var(--maroon)', color: 'white'}}>Delete</button>
                         </td>
                       </tr>
                     ))}
@@ -714,27 +827,39 @@ const AdminDashboard = () => {
           {/* TAB 4: ACTIVITY LOGS */}
           {activeTab === 'logs' && (
             <div>
-              {/* Form to add custom operational log */}
-              <div className="admin-card" style={{marginBottom: '2rem'}}>
-                <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Record General Log Entry 🪵</h3>
-                <form onSubmit={handleManualLogSubmit} className="admin-log-form">
-                  <div className="admin-form-group" style={{flex: 1, marginBottom: 0}}>
-                    <label>Action/Topic</label>
-                    <input type="text" placeholder="e.g. Offline Payment, Cash count" className="admin-input" value={manualLog.action} onChange={(e) => setManualLog({ ...manualLog, action: e.target.value })} required />
-                  </div>
-                  <div className="admin-form-group" style={{flex: 2, marginBottom: 0}}>
-                    <label>Log Details</label>
-                    <input type="text" placeholder="Enter operational notes here..." className="admin-input" value={manualLog.details} onChange={(e) => setManualLog({ ...manualLog, details: e.target.value })} required />
-                  </div>
-                  <button type="submit" className="admin-btn" style={{height: '42px'}}>Record Log</button>
-                </form>
-              </div>
-
               {/* Timeline Display */}
               <div className="admin-card">
-                <h3 style={{color: 'var(--dark)'}}>Audit Activity Logs</h3>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem'}}>
+                  <h3 style={{color: 'var(--dark)', margin: 0}}>Audit Activity Logs</h3>
+                  <div style={{display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center'}}>
+                    <select className="admin-input" style={{width: 'auto', padding: '0.5rem'}} value={logFilterAction} onChange={(e) => setLogFilterAction(e.target.value)}>
+                      <option value="">All Activities</option>
+                      {Array.from(new Set(logs.map(log => log.action))).map(action => (
+                        <option key={action} value={action}>{action}</option>
+                      ))}
+                    </select>
+                    <input type="date" className="admin-input" style={{width: 'auto', padding: '0.5rem'}} value={logFilterDate} onChange={(e) => setLogFilterDate(e.target.value)} />
+                    <input type="text" placeholder="Search record..." className="admin-input" style={{width: '200px', padding: '0.5rem'}} value={logSearchQuery} onChange={(e) => setLogSearchQuery(e.target.value)} />
+                  </div>
+                </div>
                 <div className="log-timeline">
-                  {logs.map((log) => {
+                  {logs.filter(log => {
+                    let matchesAction = true;
+                    if (logFilterAction) {
+                      matchesAction = log.action.includes(logFilterAction);
+                    }
+                    let matchesSearch = true;
+                    if (logSearchQuery) {
+                      const q = logSearchQuery.toLowerCase();
+                      matchesSearch = log.action.toLowerCase().includes(q) || log.details.toLowerCase().includes(q);
+                    }
+                    let matchesDate = true;
+                    if (logFilterDate) {
+                      const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+                      matchesDate = logDate === logFilterDate;
+                    }
+                    return matchesAction && matchesSearch && matchesDate;
+                  }).map((log) => {
                     const isManual = log.action.startsWith('[Manual]');
                     const isOrder = log.action.includes('Order');
                     
@@ -758,6 +883,74 @@ const AdminDashboard = () => {
               </div>
             </div>
           )}
+
+          {/* TAB 4.5: REVIEWS */}
+          {activeTab === 'reviews' && (
+            <div>
+              <div className="admin-card" style={{marginBottom: '2rem'}}>
+                <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>{editingReviewIndex !== null ? 'Edit Review' : 'Add New Review'}</h3>
+                <form onSubmit={handleReviewSubmit} className="admin-form-grid">
+                  <div className="admin-form-group">
+                    <label>Customer Name</label>
+                    <input type="text" className="admin-input" value={reviewForm.name} onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })} required />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Location (Optional)</label>
+                    <input type="text" className="admin-input" value={reviewForm.location} onChange={(e) => setReviewForm({ ...reviewForm, location: e.target.value })} />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Star Rating (1-5)</label>
+                    <input type="number" min="1" max="5" className="admin-input" value={reviewForm.stars} onChange={(e) => setReviewForm({ ...reviewForm, stars: Number(e.target.value) })} required />
+                  </div>
+                  <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
+                    <label>Review Text</label>
+                    <textarea className="admin-input" style={{padding: '0.75rem', resize: 'vertical', minHeight: '80px'}} value={reviewForm.text} onChange={(e) => setReviewForm({ ...reviewForm, text: e.target.value })} required></textarea>
+                  </div>
+                  <div style={{gridColumn: '1 / -1', display: 'flex', gap: '1rem'}}>
+                    <button type="submit" className="admin-btn">{editingReviewIndex !== null ? 'Update Review' : 'Add Review'}</button>
+                    {editingReviewIndex !== null && (
+                      <button type="button" className="admin-btn" style={{background: '#666'}} onClick={() => { setEditingReviewIndex(null); setReviewForm({ name: '', location: '', stars: 5, text: '' }); }}>Cancel</button>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              <div className="admin-card">
+                <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Manage Reviews</h3>
+                {parsedReviews.length === 0 ? (
+                  <p style={{color: 'var(--muted)'}}>No custom reviews added yet. The website will show default placeholder reviews.</p>
+                ) : (
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Customer</th>
+                        <th>Rating</th>
+                        <th>Review</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {parsedReviews.map((r, i) => (
+                        <tr key={i}>
+                          <td>
+                            <strong>{r.name}</strong>
+                            <div style={{fontSize: '0.8rem', color: 'var(--muted)'}}>{r.location}</div>
+                          </td>
+                          <td style={{color: 'var(--gold)'}}>{'★'.repeat(r.stars)}{'☆'.repeat(5 - r.stars)}</td>
+                          <td style={{maxWidth: '300px', whiteSpace: 'normal', fontSize: '0.85rem'}}>{r.text}</td>
+                          <td>
+                            <button onClick={() => editReview(i)} className="action-btn btn-edit">Edit</button>
+                            <button onClick={() => deleteReview(i)} className="action-btn btn-delete" style={{background: 'var(--maroon)', color: 'white'}}>Delete</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          )}
+
 
           {/* TAB 5: SETTINGS */}
           {activeTab === 'settings' && (
@@ -807,6 +1000,24 @@ const AdminDashboard = () => {
                   <label>YouTube URL</label>
                   <input type="text" name="youtube" className="admin-input" placeholder="https://youtube.com/channel" value={settingsData.youtube || ''} onChange={handleSettingsChange} />
                 </div>
+                
+                <div style={{gridColumn: '1 / -1', borderTop: '1px dashed rgba(0,0,0,0.1)', paddingTop: '1.25rem', marginTop: '0.5rem'}}>
+                  <h4 style={{fontFamily: "'Playfair Display', serif", color: 'var(--forest)', marginBottom: '0.25rem'}}>📱 Connect With Us / Social Embeds</h4>
+                  <p style={{fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem'}}>Paste the embed HTML code or post links here to display your latest posts on the homepage.</p>
+                </div>
+                <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>Latest Instagram Post Embed Code</label>
+                  <textarea name="instaEmbed" className="admin-input" style={{padding: '0.5rem', resize: 'vertical', height: '80px'}} placeholder="Paste Instagram embed iframe HTML here..." value={settingsData.instaEmbed || ''} onChange={handleSettingsChange}></textarea>
+                </div>
+                <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>Latest Facebook Post Embed Code</label>
+                  <textarea name="fbEmbed" className="admin-input" style={{padding: '0.5rem', resize: 'vertical', height: '80px'}} placeholder="Paste Facebook embed iframe HTML here..." value={settingsData.fbEmbed || ''} onChange={handleSettingsChange}></textarea>
+                </div>
+                <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>Latest YouTube Video ID (e.g. dQw4w9WgXcQ)</label>
+                  <input type="text" name="ytEmbed" className="admin-input" placeholder="e.g. dQw4w9WgXcQ" value={settingsData.ytEmbed || ''} onChange={handleSettingsChange} />
+                </div>
+
                 <div style={{gridColumn: '1 / -1', borderTop: '1px dashed rgba(0,0,0,0.1)', paddingTop: '1.25rem', marginTop: '0.5rem'}}>
                   <h4 style={{fontFamily: "'Playfair Display', serif", color: 'var(--forest)', marginBottom: '0.25rem'}}>🎬 Kitchen Video & Photo Gallery</h4>
                   <p style={{fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem'}}>Showcase how you prepare your delicacies! Enter a YouTube video link and upload/paste up to three promotional photos.</p>
@@ -816,26 +1027,30 @@ const AdminDashboard = () => {
                   <input type="text" name="makingVideoUrl" className="admin-input" placeholder="e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ" value={settingsData.makingVideoUrl || ''} onChange={handleSettingsChange} />
                 </div>
                 <div className="admin-form-group">
-                  <label>Kitchen Photo 1 (Image URL/Path)</label>
-                  <input type="text" name="makingImage1" className="admin-input" placeholder="e.g. /images/making-1.png" value={settingsData.makingImage1 || ''} onChange={handleSettingsChange} />
+                  <label>Kitchen Photo 1</label>
+                  <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
+                    {settingsData.makingImage1 && <img src={settingsData.makingImage1} alt="K1" style={{width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px'}} />}
+                    <input type="file" accept="image/*" onChange={(e) => handleSettingsImageUpload(e, 'makingImage1')} disabled={uploading} />
+                  </div>
                 </div>
                 <div className="admin-form-group">
-                  <label>Kitchen Photo 2 (Image URL/Path)</label>
-                  <input type="text" name="makingImage2" className="admin-input" placeholder="e.g. /images/making-2.png" value={settingsData.makingImage2 || ''} onChange={handleSettingsChange} />
+                  <label>Kitchen Photo 2</label>
+                  <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
+                    {settingsData.makingImage2 && <img src={settingsData.makingImage2} alt="K2" style={{width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px'}} />}
+                    <input type="file" accept="image/*" onChange={(e) => handleSettingsImageUpload(e, 'makingImage2')} disabled={uploading} />
+                  </div>
                 </div>
                 <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
-                  <label>Kitchen Photo 3 (Image URL/Path)</label>
-                  <input type="text" name="makingImage3" className="admin-input" placeholder="e.g. /images/making-3.png" value={settingsData.makingImage3 || ''} onChange={handleSettingsChange} />
+                  <label>Kitchen Photo 3</label>
+                  <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
+                    {settingsData.makingImage3 && <img src={settingsData.makingImage3} alt="K3" style={{width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px'}} />}
+                    <input type="file" accept="image/*" onChange={(e) => handleSettingsImageUpload(e, 'makingImage3')} disabled={uploading} />
+                  </div>
                 </div>
                 <div style={{gridColumn: '1 / -1', marginTop: '0.5rem'}}>
                   <button type="submit" className="admin-btn">Save Settings</button>
                 </div>
                 
-                <div style={{gridColumn: '1 / -1', borderTop: '1px dashed rgba(255,0,0,0.3)', paddingTop: '1.25rem', marginTop: '1.5rem'}}>
-                  <h4 style={{fontFamily: "'Playfair Display', serif", color: 'var(--maroon)', marginBottom: '0.25rem'}}>⚠️ Danger Zone</h4>
-                  <p style={{fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem'}}>This action will permanently delete all orders and activity logs from the system.</p>
-                  <button type="button" onClick={handleResetDashboard} className="admin-btn" style={{background: 'var(--maroon)'}}>Reset Dashboard (Delete Data)</button>
-                </div>
               </form>
             </div>
           )}

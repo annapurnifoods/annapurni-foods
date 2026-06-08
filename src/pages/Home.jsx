@@ -12,6 +12,8 @@ const Home = () => {
     address: localStorage.getItem('cust_address') || ''
   });
   const [loading, setLoading] = useState(false);
+  const [animatingCart, setAnimatingCart] = useState(false);
+  const [animatingProduct, setAnimatingProduct] = useState(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -38,48 +40,29 @@ const Home = () => {
   const activeProducts = products.filter(p => p.isAvailable !== false);
   const categories = [...new Set(activeProducts.map(p => p.category || 'Other'))];
 
-  // --- CART FUNCTIONS ---
-  const triggerFlyToCartAnimation = (e, product) => {
-    const cartButton = document.querySelector('.cart-fab') || document.querySelector('.nav-cta');
-    if (!cartButton) return;
-
-    const startX = e.clientX || e.pageX;
-    const startY = e.clientY || e.pageY;
-
-    const rect = cartButton.getBoundingClientRect();
-    const endX = rect.left + rect.width / 2;
-    const endY = rect.top + rect.height / 2;
-
-    const flyer = document.createElement('div');
-    flyer.className = 'flyer-dot';
-    flyer.style.left = `${startX - 22}px`;
-    flyer.style.top = `${startY - 22}px`;
-
-    if (product.image) {
-      flyer.style.backgroundImage = `url(${product.image})`;
-    } else {
-      flyer.style.background = 'var(--gold)';
+  // Extract custom reviews from settings if available
+  const parsedReviews = (() => {
+    try {
+      return settings?.reviewsData ? JSON.parse(settings.reviewsData) : [];
+    } catch {
+      return [];
     }
+  })();
+  const hasCustomReviews = parsedReviews.length > 0;
 
-    document.body.appendChild(flyer);
-
+  // --- CART FUNCTIONS ---
+  const triggerFullScreenAnimation = (product) => {
+    setAnimatingProduct(product);
+    setAnimatingCart(true);
     setTimeout(() => {
-      flyer.style.transform = `translate(${endX - startX}px, ${endY - startY}px) scale(0.1)`;
-      flyer.style.opacity = '0.1';
-    }, 50);
-
-    setTimeout(() => {
-      flyer.remove();
-      cartButton.classList.add('pulse-active');
-      setTimeout(() => {
-        cartButton.classList.remove('pulse-active');
-      }, 600);
-    }, 850);
+      setAnimatingCart(false);
+      setAnimatingProduct(null);
+    }, 1200); // 1.2s animation
   };
 
   const addToCart = (product, e) => {
     if (e) {
-      triggerFlyToCartAnimation(e, product);
+      triggerFullScreenAnimation(product);
     }
 
     setCart((prevCart) => {
@@ -207,7 +190,7 @@ const Home = () => {
         const adminNumber = settings.whatsappNumber.replace(/[^0-9]/g, '');
         
         // Open WhatsApp link
-        window.open(`https://wa.me/${adminNumber}?text=${encodedMsg}`, '_blank');
+        window.location.href = `https://wa.me/${adminNumber}?text=${encodedMsg}`;
         
         // Save details to localStorage for instant subsequent checkouts!
         localStorage.setItem('cust_name', checkoutData.name);
@@ -260,20 +243,22 @@ const Home = () => {
   return (
     <>
       {/* NAV */}
-      <nav>
-        <div className="nav-brand">
-          <img src="/images/annapurni-brand-logo.jpg" alt="Annapurni Logo" style={{width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)'}} />
-          <span className="nav-name">Annapurni Foods</span>
+      <nav style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '0.5rem'}}>
+        <div className="nav-brand" style={{display: 'flex', alignItems: 'center', gap: 'clamp(0.4rem, 2vw, 0.8rem)', flexShrink: 1, minWidth: 0}}>
+          <img src="/images/annapurni-brand-logo.jpg" alt="Annapurni Logo" style={{width: 'clamp(32px, 8vw, 40px)', height: 'clamp(32px, 8vw, 40px)', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)', flexShrink: 0}} />
+          <span className="nav-name" style={{fontSize: 'clamp(1.25rem, 5.5vw, 2.5rem)', fontWeight: '900', color: '#ffffff', fontFamily: '"Playfair Display", serif', letterSpacing: '1px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden'}}>Annapurni Foods</span>
         </div>
-        <ul className="nav-links">
-          <li><a href="#about">About</a></li>
-          <li><a href="#products">Products</a></li>
-          <li><a href="#why">Why Us</a></li>
-          <li><a href="#contact">Contact</a></li>
-        </ul>
-        <button onClick={() => setIsCartOpen(true)} className="nav-cta" style={{border:'none', cursor:'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-          🛒 Cart {getCartCount() > 0 && `(${getCartCount()})`}
-        </button>
+        <div style={{display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 2rem)', flexShrink: 0}}>
+          <ul className="nav-links" style={{margin: 0, padding: 0}}>
+            <li><a href="#about">About</a></li>
+            <li><a href="#products">Products</a></li>
+            <li><a href="#why">Why Us</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+          <button onClick={() => setIsCartOpen(true)} className="nav-cta" style={{border:'none', cursor:'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0, whiteSpace: 'nowrap'}}>
+            🛒 Cart {getCartCount() > 0 && `(${getCartCount()})`}
+          </button>
+        </div>
       </nav>
 
       {/* HERO */}
@@ -297,8 +282,8 @@ const Home = () => {
           <p className="hero-tagline">🍚 {settings.heroTagline}</p>
           <p className="hero-desc">Welcome to Annapurni Foods — where every jar carries the warmth of a traditional South Indian kitchen. Made with premium ingredients and generations of love.</p>
           <div className="hero-actions">
-            <a href="#products" className="btn-primary">🛍️ View Products</a>
-            <button onClick={contactWa} className="btn-secondary" style={{border:'1.5px solid rgba(254,250,224,.4)', cursor:'pointer'}}>📱 WhatsApp Order</button>
+            <a href="#products" className="btn-primary highlight-anim">🛍️ View Products</a>
+            <button onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })} className="btn-secondary highlight-anim" style={{backgroundColor: 'var(--maroon)', border: 'none', color: 'var(--cream)', cursor:'pointer'}}>📱 Shop Now</button>
           </div>
           <div className="hero-stats">
             <div className="stat-item"><div className="stat-num">{activeProducts.length}+</div><div className="stat-label">Varieties</div></div>
@@ -378,7 +363,7 @@ const Home = () => {
               <span className="section-label">✦ Our Products ✦</span>
               <h2 className="section-title">Our <em>Signature</em> Range</h2>
             </div>
-            <button onClick={() => setIsCartOpen(true)} className="btn-primary" style={{alignSelf:'flex-start', cursor:'pointer', border:'none'}}>🛒 View Shopping Cart</button>
+            <button onClick={() => setIsCartOpen(true)} className="btn-primary" style={{alignSelf:'flex-start', cursor:'pointer', border:'none'}}>🛒 View Cart</button>
           </div>
           
           {categories.map(category => {
@@ -474,6 +459,45 @@ const Home = () => {
               <h4>No Preservatives</h4>
               <p>Pure, natural, preservative-free. Just food the way it should be.</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CUSTOMER REVIEWS */}
+      <section className="reviews-section" style={{padding: '5rem 1rem', background: 'var(--cream)', borderTop: '1px solid rgba(0,0,0,0.05)'}}>
+        <div style={{maxWidth: '1200px', margin: '0 auto'}}>
+          <div style={{textAlign: 'center', marginBottom: '3rem'}}>
+            <span className="section-label">✦ Testimonials ✦</span>
+            <h2 className="section-title">Customer <em>Reviews</em></h2>
+          </div>
+          <div className="reviews-grid" style={{display: 'flex', gap: '2rem', overflowX: 'auto', paddingBottom: '1rem', snapType: 'x mandatory'}}>
+            {hasCustomReviews ? (
+              parsedReviews.map((r, i) => (
+                <div key={i} className="review-card" style={{minWidth: '300px', flex: 1, background: '#fff', padding: '2rem', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', snapAlign: 'center', borderTop: '4px solid var(--gold)'}}>
+                  <div style={{color: 'var(--gold)', fontSize: '1.5rem', marginBottom: '1rem'}}>{'★'.repeat(r.stars)}{'☆'.repeat(5 - r.stars)}</div>
+                  <p style={{fontStyle: 'italic', color: 'var(--muted)', marginBottom: '1.5rem', lineHeight: '1.6'}}>"{r.text}"</p>
+                  <div style={{fontWeight: 'bold', color: 'var(--forest)'}}>- {r.name}{r.location ? `, ${r.location}` : ''}</div>
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="review-card" style={{minWidth: '300px', flex: 1, background: '#fff', padding: '2rem', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', snapAlign: 'center', borderTop: '4px solid var(--gold)'}}>
+                  <div style={{color: 'var(--gold)', fontSize: '1.5rem', marginBottom: '1rem'}}>★★★★★</div>
+                  <p style={{fontStyle: 'italic', color: 'var(--muted)', marginBottom: '1.5rem', lineHeight: '1.6'}}>"Absolutely love the Pirandai Thokku! It tastes just like how my grandmother used to make it. Very authentic and fresh."</p>
+                  <div style={{fontWeight: 'bold', color: 'var(--forest)'}}>- Meera K., Chennai</div>
+                </div>
+                <div className="review-card" style={{minWidth: '300px', flex: 1, background: '#fff', padding: '2rem', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', snapAlign: 'center', borderTop: '4px solid var(--gold)'}}>
+                  <div style={{color: 'var(--gold)', fontSize: '1.5rem', marginBottom: '1rem'}}>★★★★★</div>
+                  <p style={{fontStyle: 'italic', color: 'var(--muted)', marginBottom: '1.5rem', lineHeight: '1.6'}}>"The Gongura Thokku is perfectly spiced. It goes so well with hot rice and ghee. Delivered on time and great packaging."</p>
+                  <div style={{fontWeight: 'bold', color: 'var(--forest)'}}>- Rajesh V., Tambaram</div>
+                </div>
+                <div className="review-card" style={{minWidth: '300px', flex: 1, background: '#fff', padding: '2rem', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', snapAlign: 'center', borderTop: '4px solid var(--gold)'}}>
+                  <div style={{color: 'var(--gold)', fontSize: '1.5rem', marginBottom: '1rem'}}>★★★★★</div>
+                  <p style={{fontStyle: 'italic', color: 'var(--muted)', marginBottom: '1.5rem', lineHeight: '1.6'}}>"No preservatives is a big plus for me. The PuliYotharai paste makes cooking so easy and it tastes amazing."</p>
+                  <div style={{fontWeight: 'bold', color: 'var(--forest)'}}>- Anitha S., Velachery</div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -589,6 +613,20 @@ const Home = () => {
             </div>
           </div>
 
+          {/* Map Section */}
+          <div className="map-container" style={{marginTop: '3rem', borderRadius: '12px', overflow: 'hidden', border: '2px solid rgba(201,134,10,0.2)', boxShadow: '0 8px 30px rgba(0,0,0,0.06)'}}>
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.6180556271966!2d80.11900137596001!3d12.932252187379207!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a525f778a4e32d1%3A0x63cd84b42fb926b4!2sRanganathan%20St%2C%20East%20Tambaram%2C%20Tambaram%2C%20Chennai%2C%20Tamil%20Nadu%20600059!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin" 
+              width="100%" 
+              height="300" 
+              style={{border:0, display: 'block'}} 
+              allowFullScreen="" 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Shop Location"
+            ></iframe>
+          </div>
+
           {hasSocialLinks && (
             <div className="social-connect-container">
               <div className="social-connect-divider">
@@ -622,6 +660,23 @@ const Home = () => {
                   </a>
                 )}
               </div>
+              
+              {/* Dynamic Social Embeds from Admin Settings */}
+              {(settings.instaEmbed || settings.fbEmbed || settings.ytEmbed) && (
+                <div className="social-embeds-grid" style={{display: 'flex', gap: '2rem', justifyContent: 'center', marginTop: '3rem', flexWrap: 'wrap'}}>
+                  {settings.instaEmbed && (
+                    <div className="social-embed-card" style={{flex: '1 1 300px', maxWidth: '350px', background: 'var(--cream)', padding: '1rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)'}} dangerouslySetInnerHTML={{__html: settings.instaEmbed}} />
+                  )}
+                  {settings.fbEmbed && (
+                    <div className="social-embed-card" style={{flex: '1 1 300px', maxWidth: '350px', background: 'var(--cream)', padding: '1rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)'}} dangerouslySetInnerHTML={{__html: settings.fbEmbed}} />
+                  )}
+                  {settings.ytEmbed && (
+                    <div className="social-embed-card" style={{flex: '1 1 300px', maxWidth: '350px', background: 'var(--cream)', padding: '1rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)'}}>
+                      <iframe width="100%" height="250" src={`https://www.youtube.com/embed/${settings.ytEmbed}`} title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen style={{borderRadius: '8px'}}></iframe>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -731,7 +786,7 @@ const Home = () => {
                 </div>
                 <div className="admin-form-group">
                   <label style={{fontSize: '0.8rem'}}>Phone / WhatsApp Number <span style={{color: 'red'}}>*</span></label>
-                  <input type="tel" name="phone" className="admin-input" style={{padding: '0.5rem'}} placeholder="+91..." value={checkoutData.phone} onChange={handlePhoneChange} autoComplete="tel" required minLength="13" maxLength="13" />
+                  <input type="tel" name="phone" className="admin-input" style={{padding: '0.5rem'}} placeholder="+91..." value={checkoutData.phone} onChange={handlePhoneChange} autoComplete="tel" required />
                 </div>
                 <div className="admin-form-group">
                   <label style={{fontSize: '0.8rem'}}>Delivery Address <span style={{color: 'red'}}>*</span></label>
@@ -745,6 +800,17 @@ const Home = () => {
           )}
         </div>
       </div>
+
+      {/* FULL SCREEN ADD TO CART ANIMATION */}
+      {animatingCart && animatingProduct && (
+        <div className="cart-anim-overlay">
+          <div className="cart-anim-content">
+            <div className="cart-anim-icon">🛒</div>
+            <img src={animatingProduct.image || '/images/default.jpg'} alt="Product" className="cart-anim-product" />
+            <h3 className="cart-anim-text">Added {animatingProduct.name} to Cart!</h3>
+          </div>
+        </div>
+      )}
     </>
   );
 };
