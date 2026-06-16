@@ -90,6 +90,9 @@ const AdminDashboard = () => {
   const [logFilterAction, setLogFilterAction] = useState('');
   const [logFilterDate, setLogFilterDate] = useState('');
   const [logSearchQuery, setLogSearchQuery] = useState('');
+  
+  // Order search state
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
 
   useEffect(() => {
     if (!token) {
@@ -481,6 +484,25 @@ const AdminDashboard = () => {
   const oneWeekAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const lastWeekOrdersList = orders.filter(o => new Date(o.createdAt).getTime() >= oneWeekAgoMs).slice().reverse();
 
+  // Filter orders based on search query
+  const filteredOrders = orders.filter(o => {
+    const q = orderSearchQuery.toLowerCase();
+    return (
+      (o.id && o.id.toLowerCase().includes(q)) ||
+      (o.customerName && o.customerName.toLowerCase().includes(q)) ||
+      (o.customerPhone && o.customerPhone.toLowerCase().includes(q))
+    );
+  });
+  
+  const filteredLastWeekOrders = lastWeekOrdersList.filter(o => {
+    const q = orderSearchQuery.toLowerCase();
+    return (
+      (o.id && o.id.toLowerCase().includes(q)) ||
+      (o.customerName && o.customerName.toLowerCase().includes(q)) ||
+      (o.customerPhone && o.customerPhone.toLowerCase().includes(q))
+    );
+  });
+
   return (
     <div className="admin-layout">
       {/* SIDEBAR */}
@@ -631,7 +653,17 @@ const AdminDashboard = () => {
           {activeTab === 'orders' && (
             <>
               <div className="admin-card">
-                <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Order Fulfillments</h3>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+                  <h3 style={{color: 'var(--dark)', margin: 0}}>Order Fulfillments</h3>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    placeholder="Search ID, Name, Phone..."
+                    value={orderSearchQuery}
+                    onChange={(e) => setOrderSearchQuery(e.target.value)}
+                    style={{width: '250px', padding: '0.4rem 0.8rem', margin: 0}}
+                  />
+                </div>
                 <table className="admin-table">
                   <thead>
                     <tr>
@@ -645,7 +677,7 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.slice().reverse().map((o) => (
+                    {filteredOrders.slice().reverse().map((o) => (
                       <tr key={o.id}>
                         <td style={{fontWeight: 'bold', fontSize: '0.85rem'}}>{o.id}</td>
                         <td>{o.customerName}</td>
@@ -676,8 +708,8 @@ const AdminDashboard = () => {
               {/* Last 1 Week Orders */}
               <div className="admin-card" style={{marginTop: '2rem'}}>
                 <h3 style={{marginBottom: '1rem', color: 'var(--dark)'}}>Last 1 Week Orders History</h3>
-                {lastWeekOrdersList.length === 0 ? (
-                  <p style={{color: 'var(--muted)', fontSize: '0.9rem'}}>No orders in the last 7 days.</p>
+                {filteredLastWeekOrders.length === 0 ? (
+                  <p style={{color: 'var(--muted)', fontSize: '0.9rem'}}>No orders found.</p>
                 ) : (
                   <table className="admin-table">
                     <thead>
@@ -690,7 +722,7 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {lastWeekOrdersList.map((o) => (
+                      {filteredLastWeekOrders.map((o) => (
                         <tr key={o.id}>
                           <td style={{fontWeight: 'bold', fontSize: '0.85rem'}}>{o.id}</td>
                           <td>{o.customerName}</td>
