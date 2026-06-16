@@ -202,7 +202,8 @@ export const ProductProvider = ({ children }) => {
           });
           if (res.ok) {
             const data = await res.json();
-            resolve(data.imageUrl);
+            const baseUrl = API_URL.replace(/\/api$/, '');
+            resolve(`${baseUrl}${data.imageUrl}`);
           } else {
             reject('Failed to upload image');
           }

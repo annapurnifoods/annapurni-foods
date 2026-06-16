@@ -593,13 +593,14 @@ const Home = () => {
                 <p style={{fontSize:'.78rem',marginTop:'.2rem',color:'var(--muted)'}}>Chat &amp; order directly</p>
               </div>
             </div>
-            <div className="contact-card">
+            <a href="https://share.google/99tQEfn3fcpm6fiYl" target="_blank" rel="noopener noreferrer" className="contact-card" style={{textDecoration: 'none', color: 'inherit'}}>
               <div className="contact-icon icon-loc">📍</div>
               <div className="contact-info">
                 <h4>Our Location</h4>
                 <p>{settings.address}</p>
+                <p style={{fontSize:'.78rem',marginTop:'.2rem',color:'var(--muted)'}}>Tap to view on map</p>
               </div>
-            </div>
+            </a>
             <div className="contact-card">
               <div className="contact-icon icon-time">🕐</div>
               <div className="contact-info">
