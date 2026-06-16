@@ -657,7 +657,7 @@ const Home = () => {
                 <p style={{fontSize:'.78rem',marginTop:'.2rem',color:'var(--muted)'}}>Chat &amp; order directly</p>
               </div>
             </div>
-            <a href="https://share.google/99tQEfn3fcpm6fiYl" target="_blank" rel="noopener noreferrer" className="contact-card" style={{textDecoration: 'none', color: 'inherit'}}>
+            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`} target="_blank" rel="noopener noreferrer" className="contact-card" style={{textDecoration: 'none', color: 'inherit'}}>
               <div className="contact-icon icon-loc">📍</div>
               <div className="contact-info">
                 <h4>Our Location</h4>

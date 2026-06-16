@@ -35,7 +35,7 @@ const initDB = async () => {
     try {
       await mongoose.connect(process.env.MONGO_URI);
       console.log('Connected to MongoDB');
-      memoryDb = await AppData.findById('appData');
+      memoryDb = await AppData.findById('appData').lean();
       if (!memoryDb) {
         memoryDb = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
         await AppData.create({ _id: 'appData', ...memoryDb });
