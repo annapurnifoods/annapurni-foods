@@ -127,7 +127,9 @@ const Home = () => {
             const response = await fetch(product.image);
             const blob = await response.blob();
             const ext = product.image.split('.').pop()?.split('?')[0] || 'jpg';
-            const file = new File([blob], `product-${product.id || 'image'}.${ext}`, { type: blob.type || 'image/jpeg' });
+            const safeName = product.name.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+            const fileName = `${safeName}-Rs${product.price}.${ext}`;
+            const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
             
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
               filesArray = [file];
