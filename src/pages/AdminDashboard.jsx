@@ -658,8 +658,8 @@ const AdminDashboard = () => {
                             borderRadius: '2rem',
                             fontSize: '0.75rem',
                             fontWeight: 'bold',
-                            background: o.status === 'Completed' ? '#E8F5E9' : o.status === 'Cancelled' ? '#FFEBEE' : o.status === 'Out for Delivery' ? '#E3F2FD' : '#FFF8E1',
-                            color: o.status === 'Completed' ? '#2E7D32' : o.status === 'Cancelled' ? '#C62828' : o.status === 'Out for Delivery' ? '#1565C0' : '#F57F17'
+                            background: o.status === 'Completed' ? '#E8F5E9' : o.status === 'Cancelled' ? '#FFEBEE' : o.status === 'Delivered' ? '#E3F2FD' : '#FFF8E1',
+                            color: o.status === 'Completed' ? '#2E7D32' : o.status === 'Cancelled' ? '#C62828' : o.status === 'Delivered' ? '#1565C0' : '#F57F17'
                           }}>
                             {o.status}
                           </span>
@@ -702,8 +702,8 @@ const AdminDashboard = () => {
                               borderRadius: '2rem',
                               fontSize: '0.75rem',
                               fontWeight: 'bold',
-                              background: o.status === 'Completed' ? '#E8F5E9' : o.status === 'Cancelled' ? '#FFEBEE' : o.status === 'Out for Delivery' ? '#E3F2FD' : '#FFF8E1',
-                              color: o.status === 'Completed' ? '#2E7D32' : o.status === 'Cancelled' ? '#C62828' : o.status === 'Out for Delivery' ? '#1565C0' : '#F57F17'
+                              background: o.status === 'Completed' ? '#E8F5E9' : o.status === 'Cancelled' ? '#FFEBEE' : o.status === 'Delivered' ? '#E3F2FD' : '#FFF8E1',
+                              color: o.status === 'Completed' ? '#2E7D32' : o.status === 'Cancelled' ? '#C62828' : o.status === 'Delivered' ? '#1565C0' : '#F57F17'
                             }}>
                               {o.status}
                             </span>
@@ -1086,7 +1086,7 @@ const AdminDashboard = () => {
                     }}
                   >
                     <option value="Pending">Pending</option>
-                    <option value="Out for Delivery">Out for Delivery</option>
+                    <option value="Delivered">Delivered</option>
                     <option value="Completed">Completed</option>
                     <option value="Cancelled">Cancelled</option>
                   </select>
