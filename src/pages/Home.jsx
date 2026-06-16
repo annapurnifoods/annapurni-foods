@@ -113,6 +113,27 @@ const Home = () => {
     return cart.reduce((count, item) => count + item.quantity, 0);
   };
 
+  const handleShare = async (product, e) => {
+    e.stopPropagation();
+    const shareText = `Check out ${product.name} from Annapurni Foods! Only ₹${product.price} for ${product.weight || '250g'}.`;
+    const shareUrl = "https://annapurnifoods.com"; // using main domain or window.location.href
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Annapurni Foods',
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        console.log('Error sharing', err);
+      }
+    } else {
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+      window.open(waUrl, '_blank');
+    }
+  };
+
   const handleCheckoutChange = (e) => {
     const { name, value } = e.target;
     let formattedVal = value;
@@ -402,7 +423,30 @@ const Home = () => {
                             <span className="price-current">₹{product.price}</span>
                             <span style={{fontSize: '0.8rem', color: 'var(--muted)', fontWeight: 'bold'}}>{product.weight || '250g'}</span>
                           </div>
-                          <button className="add-btn" onClick={(e) => addToCart(product, e)}>+</button>
+                          <div style={{display: 'flex', gap: '0.5rem'}}>
+                            <button className="share-btn" onClick={(e) => handleShare(product, e)} title="Share to WhatsApp/Social" style={{
+                              background: 'rgba(0,0,0,0.05)',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: '35px',
+                              height: '35px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              color: 'var(--forest)',
+                              transition: 'all 0.2s ease'
+                            }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="18" cy="5" r="3"></circle>
+                                <circle cx="6" cy="12" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                              </svg>
+                            </button>
+                            <button className="add-btn" onClick={(e) => addToCart(product, e)}>+</button>
+                          </div>
                         </div>
                       </div>
                     </div>
