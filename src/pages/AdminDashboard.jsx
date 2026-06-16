@@ -1131,7 +1131,7 @@ const AdminDashboard = () => {
 
             <div className="modal-footer">
               <button onClick={() => setSelectedOrder(null)} className="admin-btn" style={{background: 'gray'}}>Close</button>
-              {selectedOrder.status === 'Completed' && (
+              {(selectedOrder.status === 'Completed' || selectedOrder.status === 'Delivered') && (
                 <>
                   <button onClick={() => handleDownloadInvoice(selectedOrder)} className="admin-btn" style={{background: 'var(--gold)', color: 'var(--dark)'}}>
                     📄 Download PDF Invoice
