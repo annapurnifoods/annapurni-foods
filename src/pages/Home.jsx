@@ -116,7 +116,7 @@ const Home = () => {
   const handleShare = async (product, e) => {
     e.stopPropagation();
     const shareText = `Check out ${product.name} from Annapurni Foods! Only ₹${product.price} for ${product.weight || '250g'}.`;
-    const shareUrl = "https://annapurnifoods.com"; // using main domain or window.location.href
+    const shareUrl = "https://annapurni-foods.vercel.app"; // using vercel domain
     
     try {
       if (navigator.share) {
