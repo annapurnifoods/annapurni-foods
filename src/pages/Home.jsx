@@ -118,19 +118,37 @@ const Home = () => {
     const shareText = `Check out ${product.name} from Annapurni Foods! Only ₹${product.price} for ${product.weight || '250g'}.`;
     const shareUrl = "https://annapurnifoods.com"; // using main domain or window.location.href
     
-    if (navigator.share) {
-      try {
+    try {
+      if (navigator.share) {
+        let filesArray = [];
+        
+        try {
+          if (product.image) {
+            const response = await fetch(product.image);
+            const blob = await response.blob();
+            const ext = product.image.split('.').pop()?.split('?')[0] || 'jpg';
+            const file = new File([blob], `product-${product.id || 'image'}.${ext}`, { type: blob.type || 'image/jpeg' });
+            
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              filesArray = [file];
+            }
+          }
+        } catch (imgErr) {
+          console.log("Could not process image for sharing", imgErr);
+        }
+
         await navigator.share({
           title: 'Annapurni Foods',
           text: shareText,
           url: shareUrl,
+          ...(filesArray.length > 0 ? { files: filesArray } : {})
         });
-      } catch (err) {
-        console.log('Error sharing', err);
+      } else {
+        const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+        window.open(waUrl, '_blank');
       }
-    } else {
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
-      window.open(waUrl, '_blank');
+    } catch (err) {
+      console.log('Error sharing', err);
     }
   };
 
