@@ -374,7 +374,7 @@ const Home = () => {
                 <h3 style={{fontFamily: "'Playfair Display',serif", fontSize: '2rem', color: 'var(--forest)', borderBottom: '2px solid var(--border-gold)', paddingBottom: '0.5rem', marginBottom: '2rem'}}>{category}</h3>
                 <div className="products-grid">
                   {catProducts.map(product => (
-                    <div key={product.id} className="product-card" onClick={(e) => addToCart(product, e)}>
+                    <div key={product.id} className="product-card">
                       <div className="product-img-wrap">
                         <img 
                           className="product-img" 
@@ -402,7 +402,7 @@ const Home = () => {
                             <span className="price-current">₹{product.price}</span>
                             <span style={{fontSize: '0.8rem', color: 'var(--muted)', fontWeight: 'bold'}}>{product.weight || '250g'}</span>
                           </div>
-                          <button className="add-btn">+</button>
+                          <button className="add-btn" onClick={(e) => addToCart(product, e)}>+</button>
                         </div>
                       </div>
                     </div>
