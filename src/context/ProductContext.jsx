@@ -190,26 +190,7 @@ export const ProductProvider = ({ children }) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = async () => {
-        try {
-          const base64 = reader.result;
-          const res = await fetch(`${API_URL}/upload`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': token
-            },
-            body: JSON.stringify({ filename: file.name, base64 })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            const baseUrl = API_URL.replace(/\/api$/, '');
-            resolve(`${baseUrl}${data.imageUrl}`);
-          } else {
-            reject('Failed to upload image');
-          }
-        } catch (error) {
-          reject(error);
-        }
+        resolve(reader.result);
       };
       reader.onerror = () => reject('Error reading file');
       reader.readAsDataURL(file);
