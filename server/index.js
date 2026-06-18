@@ -9,9 +9,9 @@ const mongoose = require('mongoose');
 const app = express();
 app.use(cors());
 
-// Support larger payload sizes for base64 image uploads
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// Support larger payload sizes for base64 image uploads (increased to 50mb for mobile images)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve static images directory
 app.use('/images', express.static(path.join(__dirname, '../public/images')));
@@ -29,6 +29,13 @@ const dbSchema = new mongoose.Schema({
   logs: Array
 });
 const AppData = mongoose.model('AppData', dbSchema);
+
+const imageSchema = new mongoose.Schema({
+  name: String,
+  data: Buffer,
+  contentType: String
+});
+const ImageModel = mongoose.model('Image', imageSchema);
 
 const initDB = async () => {
   if (process.env.MONGO_URI) {
@@ -54,7 +61,9 @@ const writeDB = async (data) => {
   memoryDb = data;
   if (process.env.MONGO_URI && mongoose.connection.readyState === 1) {
     try {
-      await AppData.findByIdAndUpdate('appData', data);
+      const updateData = { ...data };
+      delete updateData._id;
+      await AppData.findByIdAndUpdate('appData', updateData, { upsert: true });
     } catch (err) {
       console.error('Failed to save to MongoDB', err);
     }
@@ -181,22 +190,45 @@ app.post('/api/upload', authenticateToken, async (req, res) => {
   }
 
   try {
+    const match = base64.match(/^data:(image\/\w+);base64,/);
+    const contentType = match ? match[1] : 'image/jpeg';
     const base64Data = base64.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64Data, 'base64');
     
     const cleanName = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    const imagesDir = path.join(__dirname, '../public/images');
-    
-    if (!fs.existsSync(imagesDir)){
-      fs.mkdirSync(imagesDir, { recursive: true });
+
+    if (process.env.MONGO_URI && mongoose.connection.readyState === 1) {
+      const newImg = await ImageModel.create({ name: cleanName, data: buffer, contentType });
+      await addSystemLog('Image Uploaded', `Admin uploaded an image: ${cleanName}`);
+      res.json({ imageUrl: `/api/images/${newImg._id}` });
+    } else {
+      const imagesDir = path.join(__dirname, '../public/images');
+      if (!fs.existsSync(imagesDir)){
+        fs.mkdirSync(imagesDir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(imagesDir, cleanName), buffer);
+      await addSystemLog('Image Uploaded', `Admin uploaded an image: ${cleanName}`);
+      res.json({ imageUrl: `/images/${cleanName}` });
     }
-    
-    fs.writeFileSync(path.join(imagesDir, cleanName), buffer);
-    await addSystemLog('Image Uploaded', `Admin uploaded an image: ${cleanName}`);
-    res.json({ imageUrl: `/images/${cleanName}` });
   } catch (error) {
     console.error('Error saving uploaded image:', error);
     res.status(500).json({ error: 'Failed to upload image' });
+  }
+});
+
+// GET Image from MongoDB
+app.get('/api/images/:id', async (req, res) => {
+  if (process.env.MONGO_URI && mongoose.connection.readyState === 1) {
+    try {
+      const img = await ImageModel.findById(req.params.id);
+      if (!img) return res.status(404).send('Not found');
+      res.contentType(img.contentType);
+      res.send(img.data);
+    } catch(err) {
+      res.status(404).send('Not found');
+    }
+  } else {
+    res.status(404).send('Not found');
   }
 });
 
