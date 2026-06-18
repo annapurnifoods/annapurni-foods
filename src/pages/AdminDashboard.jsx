@@ -573,7 +573,7 @@ const AdminDashboard = () => {
             Annapurni Admin Dashboard
           </div>
           <div>
-            <button onClick={handleDownloadWeeklyReport} className="admin-btn" style={{marginRight: '1rem', background: 'var(--forest-light)', color: 'white'}}>📄 Weekly Report (PDF)</button>
+            <button onClick={() => handleDownloadReport(orders)} className="admin-btn" style={{marginRight: '1rem', background: 'var(--forest-light)', color: 'white'}}>📄 All Orders Report (PDF)</button>
             <button onClick={handleExportRecords} className="admin-btn" style={{marginRight: '1rem', background: 'var(--gold-light)', color: 'var(--dark)'}}>💾 Save All (CSV)</button>
             <button onClick={() => window.open('/', '_blank')} className="admin-btn" style={{marginRight: '1rem'}}>View Site</button>
             <button onClick={handleLogout} className="admin-btn" style={{background: 'var(--maroon)'}}>Logout</button>
