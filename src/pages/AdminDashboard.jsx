@@ -107,10 +107,14 @@ const AdminDashboard = () => {
   }, [settings]);
 
   useEffect(() => {
-    if (orders && orders.length > 0) {
+    if ((orders && orders.length > 0) || (logs && logs.length > 0)) {
       let oldestDate = new Date().getTime();
-      orders.forEach(o => {
+      (orders || []).forEach(o => {
         const t = new Date(o.createdAt).getTime();
+        if (t < oldestDate) oldestDate = t;
+      });
+      (logs || []).forEach(l => {
+        const t = new Date(l.timestamp).getTime();
         if (t < oldestDate) oldestDate = t;
       });
       
@@ -119,24 +123,33 @@ const AdminDashboard = () => {
         if (!sessionStorage.getItem('weeklyResetPrompted')) {
           sessionStorage.setItem('weeklyResetPrompted', 'true');
           setTimeout(() => {
-             const confirmReset = window.confirm("You have orders older than 2 weeks! Would you like to automatically backup these old orders and free up MongoDB space now?");
+             const confirmReset = window.confirm("You have records older than 2 weeks! Would you like to automatically backup these old orders and logs and free up MongoDB space now?");
              if (confirmReset) {
                 const twoWeeksAgoMs = Date.now() - twoWeeksMs;
-                const oldOrders = orders.filter(o => new Date(o.createdAt).getTime() < twoWeeksAgoMs);
+                const oldOrders = (orders || []).filter(o => new Date(o.createdAt).getTime() < twoWeeksAgoMs);
+                const oldLogs = (logs || []).filter(l => new Date(l.timestamp).getTime() < twoWeeksAgoMs);
                 
-                handleExportRecords(oldOrders); 
-                handleDownloadReport(oldOrders);
+                if (oldOrders.length > 0) {
+                  handleExportRecords(oldOrders); 
+                  handleDownloadReport(oldOrders);
+                }
+                
+                if (oldLogs.length > 0) {
+                  setTimeout(() => {
+                    handleExportLogs(oldLogs);
+                  }, 500);
+                }
                 
                 setTimeout(async () => {
                    await resetDashboard(twoWeeksAgoMs);
-                   alert("Backup complete! Old orders have been deleted to save space.");
+                   alert("Backup complete! Old records have been deleted to save space.");
                 }, 2000);
              }
           }, 1500);
         }
       }
     }
-  }, [orders]);
+  }, [orders, logs]);
 
   const handleLogout = () => {
     logout();
@@ -187,6 +200,35 @@ const AdminDashboard = () => {
     a.setAttribute('hidden', '');
     a.setAttribute('href', url);
     a.setAttribute('download', 'annapurni_orders.csv');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const handleExportLogs = (logsToExport = logs) => {
+    if (!logsToExport || logsToExport.length === 0) {
+      alert("No logs to export.");
+      return;
+    }
+    const csvRows = [];
+    csvRows.push(['Log ID', 'Action', 'Details', 'Timestamp'].join(','));
+    logsToExport.forEach(log => {
+      const escapedAction = `"${log.action.replace(/"/g, '""')}"`;
+      const escapedDetails = `"${log.details.replace(/"/g, '""')}"`;
+      csvRows.push([
+        log.id,
+        escapedAction,
+        escapedDetails,
+        new Date(log.timestamp).toLocaleString()
+      ].join(','));
+    });
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'annapurni_activity_logs.csv');
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -893,6 +935,7 @@ const AdminDashboard = () => {
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem'}}>
                   <h3 style={{color: 'var(--dark)', margin: 0}}>Audit Activity Logs</h3>
                   <div style={{display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center'}}>
+                    <button onClick={() => handleExportLogs(logs)} className="admin-btn" style={{background: 'var(--gold-light)', color: 'var(--dark)', padding: '0.5rem 1rem'}}>💾 Save Logs (CSV)</button>
                     <select className="admin-input" style={{width: 'auto', padding: '0.5rem'}} value={logFilterAction} onChange={(e) => setLogFilterAction(e.target.value)}>
                       <option value="">All Activities</option>
                       {Array.from(new Set(logs.map(log => log.action))).map(action => (
