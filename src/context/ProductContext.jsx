@@ -195,7 +195,7 @@ export const ProductProvider = ({ children }) => {
             method: 'POST',
             headers: authHeaders,
             body: JSON.stringify({
-              filename: file.name,
+              filename: file.name || `mobile-upload-${Date.now()}.jpg`,
               base64: reader.result
             })
           });
@@ -203,10 +203,15 @@ export const ProductProvider = ({ children }) => {
             const data = await res.json();
             resolve(data.imageUrl);
           } else {
-            reject('Server rejected upload');
+            let errorMsg = `Server error: ${res.status}`;
+            try {
+              const errData = await res.json();
+              if (errData.error) errorMsg = errData.error;
+            } catch (e) {}
+            reject(errorMsg);
           }
         } catch (err) {
-          reject(err);
+          reject(err.message || err);
         }
       };
       reader.onerror = () => reject('Error reading file');

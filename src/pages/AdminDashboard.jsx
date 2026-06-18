@@ -225,7 +225,7 @@ const AdminDashboard = () => {
       alert('Image uploaded successfully! Path has been set.');
     } catch (err) {
       console.error(err);
-      alert('Failed to upload image. Please try again.');
+      alert('Failed to upload image. Error: ' + (err.message || err));
     } finally {
       setUploading(false);
     }
@@ -241,7 +241,7 @@ const AdminDashboard = () => {
       alert('Image uploaded successfully!');
     } catch (err) {
       console.error(err);
-      alert('Failed to upload image. Please try again.');
+      alert('Failed to upload image. Error: ' + (err.message || err));
     } finally {
       setUploading(false);
     }
