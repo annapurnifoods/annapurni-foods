@@ -106,6 +106,35 @@ const AdminDashboard = () => {
     }
   }, [settings]);
 
+  useEffect(() => {
+    if (orders && orders.length > 0) {
+      let oldestDate = new Date().getTime();
+      orders.forEach(o => {
+        const t = new Date(o.createdAt).getTime();
+        if (t < oldestDate) oldestDate = t;
+      });
+      
+      const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+      if (Date.now() - oldestDate > oneWeekMs) {
+        if (!sessionStorage.getItem('weeklyResetPrompted')) {
+          sessionStorage.setItem('weeklyResetPrompted', 'true');
+          setTimeout(() => {
+             const confirmReset = window.confirm("You have orders older than 1 week! Would you like to automatically download the records and reset the dashboard now?");
+             if (confirmReset) {
+                handleExportRecords(); 
+                handleDownloadWeeklyReport();
+                
+                setTimeout(async () => {
+                   await resetDashboard();
+                   alert("Dashboard has been successfully reset for the new week!");
+                }, 2000);
+             }
+          }, 1500);
+        }
+      }
+    }
+  }, [orders]);
+
   const handleLogout = () => {
     logout();
     navigate('/');

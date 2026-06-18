@@ -201,7 +201,9 @@ export const ProductProvider = ({ children }) => {
           });
           if (res.ok) {
             const data = await res.json();
-            resolve(data.imageUrl);
+            const origin = API_URL.replace('/api', '');
+            const finalUrl = data.imageUrl.startsWith('/') ? `${origin}${data.imageUrl}` : data.imageUrl;
+            resolve(finalUrl);
           } else {
             let errorMsg = `Server error: ${res.status}`;
             try {
