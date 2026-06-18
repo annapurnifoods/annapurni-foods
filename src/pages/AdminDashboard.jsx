@@ -114,21 +114,21 @@ const AdminDashboard = () => {
         if (t < oldestDate) oldestDate = t;
       });
       
-      const sevenWeeksMs = 7 * 7 * 24 * 60 * 60 * 1000;
-      if (Date.now() - oldestDate > sevenWeeksMs) {
+      const twoWeeksMs = 14 * 24 * 60 * 60 * 1000;
+      if (Date.now() - oldestDate > twoWeeksMs) {
         if (!sessionStorage.getItem('weeklyResetPrompted')) {
           sessionStorage.setItem('weeklyResetPrompted', 'true');
           setTimeout(() => {
-             const confirmReset = window.confirm("You have orders older than 7 weeks! Would you like to automatically backup these old orders and free up MongoDB space now?");
+             const confirmReset = window.confirm("You have orders older than 2 weeks! Would you like to automatically backup these old orders and free up MongoDB space now?");
              if (confirmReset) {
-                const sevenWeeksAgoMs = Date.now() - sevenWeeksMs;
-                const oldOrders = orders.filter(o => new Date(o.createdAt).getTime() < sevenWeeksAgoMs);
+                const twoWeeksAgoMs = Date.now() - twoWeeksMs;
+                const oldOrders = orders.filter(o => new Date(o.createdAt).getTime() < twoWeeksAgoMs);
                 
                 handleExportRecords(oldOrders); 
                 handleDownloadReport(oldOrders);
                 
                 setTimeout(async () => {
-                   await resetDashboard(sevenWeeksAgoMs);
+                   await resetDashboard(twoWeeksAgoMs);
                    alert("Backup complete! Old orders have been deleted to save space.");
                 }, 2000);
              }

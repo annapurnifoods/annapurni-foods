@@ -310,7 +310,7 @@ app.delete('/api/reset', authenticateToken, async (req, res) => {
     // Keep only recent logs
     db.logs = db.logs.filter(l => new Date(l.timestamp).getTime() >= beforeDate);
     await writeDB(db);
-    await addSystemLog('Old Data Cleared', `Admin cleared ${ordersToDelete.length} orders older than 7 weeks to save space.`);
+    await addSystemLog('Old Data Cleared', `Admin cleared ${ordersToDelete.length} orders older than 2 weeks to save space.`);
   } else {
     db.orders = [];
     db.logs = [];
