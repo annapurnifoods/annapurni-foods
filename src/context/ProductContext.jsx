@@ -2,9 +2,18 @@ import { createContext, useState, useEffect } from 'react';
 
 export const ProductContext = createContext();
 // Smart API URL: Automatically switch between local development and production live servers!
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+export const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:3001/api'
   : 'https://annapurni-backend.onrender.com/api';
+
+export const getImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('/images/')) {
+    const origin = API_URL.replace('/api', '');
+    return `${origin}${url}`;
+  }
+  return url;
+};
 
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
@@ -201,9 +210,7 @@ export const ProductProvider = ({ children }) => {
           });
           if (res.ok) {
             const data = await res.json();
-            const origin = API_URL.replace('/api', '');
-            const finalUrl = data.imageUrl.startsWith('/') ? `${origin}${data.imageUrl}` : data.imageUrl;
-            resolve(finalUrl);
+            resolve(data.imageUrl);
           } else {
             let errorMsg = `Server error: ${res.status}`;
             try {

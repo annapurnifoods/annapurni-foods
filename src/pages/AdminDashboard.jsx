@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ProductContext } from '../context/ProductContext';
+import { ProductContext, getImageUrl } from '../context/ProductContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -863,7 +863,7 @@ const AdminDashboard = () => {
                   <tbody>
                     {products.map((p) => (
                       <tr key={p.id} style={{opacity: p.isAvailable === false ? 0.6 : 1}}>
-                        <td><img src={p.image} alt={p.name} style={{width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px', border: '1px solid rgba(0,0,0,0.06)'}} /></td>
+                        <td><img src={getImageUrl(p.image)} alt={p.name} style={{width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px', border: '1px solid rgba(0,0,0,0.06)'}} /></td>
                         <td>
                           <div style={{fontWeight: 'bold'}}>{p.name}</div>
                           <div style={{fontSize: '0.8rem', color: 'var(--muted)'}}>{p.category}</div>

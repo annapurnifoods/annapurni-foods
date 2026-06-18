@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { ProductContext } from '../context/ProductContext';
+import { ProductContext, getImageUrl } from '../context/ProductContext';
 import { Link } from 'react-router-dom';
 
 const Home = () => {
@@ -419,7 +419,7 @@ const Home = () => {
                       <div className="product-img-wrap">
                         <img 
                           className="product-img" 
-                          src={product.image} 
+                          src={getImageUrl(product.image)} 
                           alt={product.name} 
                           onError={(e) => {
                             e.target.onerror = null;
