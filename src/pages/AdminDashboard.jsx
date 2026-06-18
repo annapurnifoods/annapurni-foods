@@ -114,19 +114,22 @@ const AdminDashboard = () => {
         if (t < oldestDate) oldestDate = t;
       });
       
-      const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-      if (Date.now() - oldestDate > oneWeekMs) {
+      const sevenWeeksMs = 7 * 7 * 24 * 60 * 60 * 1000;
+      if (Date.now() - oldestDate > sevenWeeksMs) {
         if (!sessionStorage.getItem('weeklyResetPrompted')) {
           sessionStorage.setItem('weeklyResetPrompted', 'true');
           setTimeout(() => {
-             const confirmReset = window.confirm("You have orders older than 1 week! Would you like to automatically download the records and reset the dashboard now?");
+             const confirmReset = window.confirm("You have orders older than 7 weeks! Would you like to automatically backup these old orders and free up MongoDB space now?");
              if (confirmReset) {
-                handleExportRecords(); 
-                handleDownloadWeeklyReport();
+                const sevenWeeksAgoMs = Date.now() - sevenWeeksMs;
+                const oldOrders = orders.filter(o => new Date(o.createdAt).getTime() < sevenWeeksAgoMs);
+                
+                handleExportRecords(oldOrders); 
+                handleDownloadReport(oldOrders);
                 
                 setTimeout(async () => {
-                   await resetDashboard();
-                   alert("Dashboard has been successfully reset for the new week!");
+                   await resetDashboard(sevenWeeksAgoMs);
+                   alert("Backup complete! Old orders have been deleted to save space.");
                 }, 2000);
              }
           }, 1500);
@@ -160,14 +163,14 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleExportRecords = () => {
-    if (!orders || orders.length === 0) {
+  const handleExportRecords = (ordersToExport = orders) => {
+    if (!ordersToExport || ordersToExport.length === 0) {
       alert("No records to export.");
       return;
     }
     const csvRows = [];
     csvRows.push(['Order ID', 'Customer Name', 'Phone', 'Date', 'Total Amount', 'Status'].join(','));
-    orders.forEach(order => {
+    ordersToExport.forEach(order => {
       csvRows.push([
         order.id,
         `"${order.customerName}"`,
@@ -189,13 +192,10 @@ const AdminDashboard = () => {
     document.body.removeChild(a);
   };
 
-  const handleDownloadWeeklyReport = () => {
+  const handleDownloadReport = (ordersToExport) => {
     const doc = new jsPDF();
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
-    const weeklyOrders = orders.filter(o => new Date(o.createdAt) >= oneWeekAgo && o.status === 'Completed');
-    const weeklyRevenue = weeklyOrders.reduce((total, o) => total + o.totalAmount, 0);
+    const completedOrders = ordersToExport.filter(o => o.status === 'Completed');
+    const totalRevenue = completedOrders.reduce((total, o) => total + o.totalAmount, 0);
 
     // Header
     doc.setFontSize(22);
@@ -204,7 +204,7 @@ const AdminDashboard = () => {
     
     doc.setFontSize(16);
     doc.setTextColor(0, 0, 0);
-    doc.text("Weekly Sales Report", 105, 30, { align: "center" });
+    doc.text("Archived Orders Backup", 105, 30, { align: "center" });
     
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
@@ -216,14 +216,14 @@ const AdminDashboard = () => {
     // Summary Stats
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
-    doc.text(`Total Completed Orders (Last 7 Days): ${weeklyOrders.length}`, 14, 52);
-    doc.text(`Total Revenue (Last 7 Days): Rs. ${weeklyRevenue}`, 14, 59);
+    doc.text(`Total Completed Orders (Archived): ${completedOrders.length}`, 14, 52);
+    doc.text(`Total Revenue from Archived Orders: Rs. ${totalRevenue}`, 14, 59);
 
     // Orders table
     const tableColumn = ["Order ID", "Date", "Customer", "Amount"];
     const tableRows = [];
 
-    weeklyOrders.forEach(order => {
+    completedOrders.forEach(order => {
       tableRows.push([
         order.id,
         new Date(order.createdAt).toLocaleDateString(),
@@ -240,7 +240,7 @@ const AdminDashboard = () => {
       headStyles: { fillColor: [34, 139, 34] }
     });
 
-    doc.save(`Annapurni_Weekly_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`Annapurni_Orders_Backup_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   // --- IMAGE UPLOAD HANDLER ---

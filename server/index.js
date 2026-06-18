@@ -299,13 +299,25 @@ app.post('/api/logs', authenticateToken, async (req, res) => {
   res.status(201).json(db.logs[0]);
 });
 
-// DELETE Reset Dashboard (Clear orders and logs)
+// DELETE Reset Dashboard (Clear orders and logs, optionally before a specific date)
 app.delete('/api/reset', authenticateToken, async (req, res) => {
   const db = readDB();
-  db.orders = [];
-  db.logs = [];
-  await writeDB(db);
-  await addSystemLog('Dashboard Reset', 'Admin reset the dashboard. Cleared all orders and logs.');
+  const beforeDate = req.query.beforeDate ? parseInt(req.query.beforeDate) : null;
+
+  if (beforeDate) {
+    const ordersToDelete = db.orders.filter(o => new Date(o.createdAt).getTime() < beforeDate);
+    db.orders = db.orders.filter(o => new Date(o.createdAt).getTime() >= beforeDate);
+    // Keep only recent logs
+    db.logs = db.logs.filter(l => new Date(l.timestamp).getTime() >= beforeDate);
+    await writeDB(db);
+    await addSystemLog('Old Data Cleared', `Admin cleared ${ordersToDelete.length} orders older than 7 weeks to save space.`);
+  } else {
+    db.orders = [];
+    db.logs = [];
+    await writeDB(db);
+    await addSystemLog('Dashboard Reset', 'Admin reset the dashboard. Cleared all orders and logs.');
+  }
+  
   const updatedDb = readDB(); // To get the log we just added
   res.json({ logs: updatedDb.logs, orders: updatedDb.orders });
 });

@@ -228,8 +228,12 @@ export const ProductProvider = ({ children }) => {
     });
   };
 
-  const resetDashboard = async () => {
-    const res = await fetch(`${API_URL}/reset`, {
+  const resetDashboard = async (beforeDate) => {
+    let url = `${API_URL}/reset`;
+    if (beforeDate) {
+      url += `?beforeDate=${beforeDate}`;
+    }
+    const res = await fetch(url, {
       method: 'DELETE',
       headers: authHeaders
     });
