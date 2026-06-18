@@ -115,16 +115,20 @@ const Home = () => {
 
   const handleShare = async (product, e) => {
     e.stopPropagation();
-    const shareText = `Check out ${product.name} from Annapurni Foods! Only ₹${product.price} for ${product.weight || '250g'}.`;
-    const shareUrl = "https://annapurni-foods.vercel.app/#products"; // using vercel domain with products anchor
+    const shareText = `Check out ${product.name} from Annapurni Foods! Only ₹${product.price} for ${product.weight || '250g'}.\n\nOrder here: https://annapurni-foods.vercel.app`;
     
     try {
       if (navigator.share) {
         let filesArray = [];
+        let shareData = {
+          title: 'Annapurni Foods',
+          text: shareText
+        };
         
         try {
           if (product.image) {
-            const response = await fetch(product.image);
+            const imageUrl = getImageUrl(product.image);
+            const response = await fetch(imageUrl);
             const blob = await response.blob();
             const ext = product.image.split('.').pop()?.split('?')[0] || 'jpg';
             const safeName = product.name.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -133,20 +137,16 @@ const Home = () => {
             
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
               filesArray = [file];
+              shareData.files = filesArray;
             }
           }
         } catch (imgErr) {
           console.log("Could not process image for sharing", imgErr);
         }
 
-        await navigator.share({
-          title: 'Annapurni Foods',
-          text: shareText,
-          url: shareUrl,
-          ...(filesArray.length > 0 ? { files: filesArray } : {})
-        });
+        await navigator.share(shareData);
       } else {
-        const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+        const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
         window.open(waUrl, '_blank');
       }
     } catch (err) {
@@ -241,7 +241,7 @@ const Home = () => {
         // Reset Cart and close drawer, keeping the customer details preserved!
         setCart([]);
         setIsCartOpen(false);
-        alert('Order placed successfully! WhatsApp has been opened to finalize your purchase.');
+        alert('Taking you to WhatsApp. Please click "Send" in WhatsApp to place your order!');
       } else {
         alert('Failed to save order in database. Please try again.');
       }
