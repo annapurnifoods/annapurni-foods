@@ -138,6 +138,16 @@ app.put('/api/settings', authenticateToken, async (req, res) => {
   res.json(db.settings);
 });
 
+// GET status (Debug endpoint)
+app.get('/api/status', (req, res) => {
+  const isMongoConnected = mongoose.connection.readyState === 1;
+  res.json({
+    database: isMongoConnected ? 'MongoDB' : 'Local File (db.json)',
+    mongoReadyState: mongoose.connection.readyState,
+    envMongoUriPresent: !!process.env.MONGO_URI
+  });
+});
+
 // GET products
 app.get('/api/products', (req, res) => {
   const db = readDB();
