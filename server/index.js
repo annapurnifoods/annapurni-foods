@@ -20,6 +20,7 @@ const DB_FILE = path.join(__dirname, './data/db.json');
 
 // --- DATABASE LOGIC ---
 let memoryDb = null;
+let mongoError = null;
 
 const dbSchema = new mongoose.Schema({
   _id: { type: String, default: 'appData' },
@@ -42,6 +43,7 @@ const initDB = async () => {
     try {
       await mongoose.connect(process.env.MONGO_URI);
       console.log('Connected to MongoDB');
+      mongoError = null;
       memoryDb = await AppData.findById('appData').lean();
       if (!memoryDb) {
         memoryDb = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
@@ -49,6 +51,7 @@ const initDB = async () => {
       }
     } catch (err) {
       console.error('Failed to connect to MongoDB, falling back to local file', err);
+      mongoError = err.message || err.toString();
       memoryDb = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
     }
   } else {
@@ -144,7 +147,8 @@ app.get('/api/status', (req, res) => {
   res.json({
     database: isMongoConnected ? 'MongoDB' : 'Local File (db.json)',
     mongoReadyState: mongoose.connection.readyState,
-    envMongoUriPresent: !!process.env.MONGO_URI
+    envMongoUriPresent: !!process.env.MONGO_URI,
+    connectionError: mongoError
   });
 });
 
