@@ -8,8 +8,11 @@ export const API_URL = window.location.hostname === 'localhost' || window.locati
 
 export const getImageUrl = (url) => {
   if (!url) return '';
+  const origin = API_URL.replace('/api', '');
   if (url.startsWith('/images/')) {
-    const origin = API_URL.replace('/api', '');
+    return `${origin}${url}`;
+  }
+  if (url.startsWith('/api/images/')) {
     return `${origin}${url}`;
   }
   return url;
