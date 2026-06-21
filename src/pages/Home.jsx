@@ -307,7 +307,9 @@ const Home = () => {
         return <iframe src={`https://www.instagram.com/${match[1]}/${match[2]}/embed`} width="100%" height="400" frameBorder="0" scrolling="no" allowTransparency="true" allowFullScreen></iframe>;
       }
     } else if (rawUrl.includes('facebook.com')) {
-      return <iframe src={`https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(rawUrl)}&show_text=true&width=350`} width="100%" height="400" style={{border:'none',overflow:'hidden'}} scrolling="no" frameBorder="0" allowFullScreen={true} allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>;
+      const isVideo = rawUrl.includes('/share/r/') || rawUrl.includes('/reel/') || rawUrl.includes('/watch') || rawUrl.includes('/videos/');
+      const endpoint = isVideo ? 'video.php' : 'post.php';
+      return <iframe src={`https://www.facebook.com/plugins/${endpoint}?href=${encodeURIComponent(rawUrl)}&show_text=true&width=350`} width="100%" height="400" style={{border:'none',overflow:'hidden'}} scrolling="no" frameBorder="0" allowFullScreen={true} allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>;
     }
     
     if (rawUrl.startsWith('http')) {
