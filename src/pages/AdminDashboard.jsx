@@ -1107,9 +1107,15 @@ const AdminDashboard = () => {
                   <input type="text" name="youtube" className="admin-input" placeholder="https://youtube.com/channel" value={settingsData.youtube || ''} onChange={handleSettingsChange} />
                 </div>
                 
-                <div style={{gridColumn: '1 / -1', borderTop: '1px dashed rgba(0,0,0,0.1)', paddingTop: '1.25rem', marginTop: '0.5rem'}}>
-                  <h4 style={{fontFamily: "'Playfair Display', serif", color: 'var(--forest)', marginBottom: '0.25rem'}}>📱 Connect With Us / Social Embeds</h4>
-                  <p style={{fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem'}}>Paste the embed HTML code or post links here to display your latest posts on the homepage.</p>
+                <div style={{gridColumn: '1 / -1', borderTop: '1px dashed rgba(0,0,0,0.1)', paddingTop: '1.25rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem'}}>
+                  <div>
+                    <h4 style={{fontFamily: "'Playfair Display', serif", color: 'var(--forest)', marginBottom: '0.25rem'}}>📱 Connect With Us / Social Embeds</h4>
+                    <p style={{fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem'}}>Paste the embed HTML code or post links here to display your latest posts on the homepage.</p>
+                  </div>
+                  <label style={{display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--dark)'}}>
+                    <input type="checkbox" name="showSocialEmbeds" checked={settingsData.showSocialEmbeds !== false} onChange={handleSettingsChange} />
+                    Show in website
+                  </label>
                 </div>
                 <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
                   <label>Latest Instagram Post Embed Code</label>

@@ -728,7 +728,7 @@ const Home = () => {
             ></iframe>
           </div>
 
-          {hasSocialLinks && (
+          {hasSocialLinks && settings.showSocialEmbeds !== false && (
             <div className="social-connect-container">
               <div className="social-connect-divider">
                 <span className="social-divider-line"></span>
