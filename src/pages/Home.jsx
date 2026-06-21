@@ -115,45 +115,34 @@ const Home = () => {
 
   const handleShare = async (product, e) => {
     e.stopPropagation();
-    const shareText = `Check out ${product.name} from Annapurni Foods!\n\n${product.desc}\n\nPrice: ₹${product.price} for ${product.weight || '250g'}.`;
+    
+    const imageUrl = getImageUrl(product.image);
+    const shareText = `Check out ${product.name} from Annapurni Foods!\n\n${product.desc}\n\nPrice: ₹${product.price} for ${product.weight || '250g'}.\n\nProduct Image: ${imageUrl}`;
     const shareUrl = 'https://annapurni-foods.vercel.app';
     
     try {
       if (navigator.share) {
-        let filesArray = [];
-        let shareData = {
-          title: 'Annapurni Foods',
-          text: shareText,
-          url: shareUrl
-        };
-        
         try {
-          if (product.image) {
-            const imageUrl = getImageUrl(product.image);
-            const response = await fetch(imageUrl);
-            const blob = await response.blob();
-            const ext = product.image.split('.').pop()?.split('?')[0] || 'jpg';
-            const safeName = product.name.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-            const fileName = `${safeName}-Rs${product.price}.${ext}`;
-            const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
-            
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-              filesArray = [file];
-              shareData.files = filesArray;
-            }
+          await navigator.share({
+            title: `Annapurni Foods - ${product.name}`,
+            text: shareText,
+            url: shareUrl
+          });
+          return;
+        } catch (shareErr) {
+          if (shareErr.name === 'AbortError') {
+            return; // User cancelled, do nothing
           }
-        } catch (imgErr) {
-          console.log("Could not process image for sharing", imgErr);
+          throw new Error('Native share failed or lost transient activation');
         }
-
-        await navigator.share(shareData);
       } else {
-        const waText = `${shareText}\n\nOrder here: ${shareUrl}`;
-        const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
-        window.open(waUrl, '_blank');
+        throw new Error('Native share not supported');
       }
     } catch (err) {
-      console.log('Error sharing', err);
+      // Fallback to WhatsApp
+      const waText = `${shareText}\n\nOrder here: ${shareUrl}`;
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+      window.open(waUrl, '_blank');
     }
   };
 
