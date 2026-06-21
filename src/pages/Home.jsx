@@ -116,18 +116,37 @@ const Home = () => {
   const handleShare = async (product, e) => {
     e.stopPropagation();
     
-    const imageUrl = getImageUrl(product.image);
-    const shareText = `Check out ${product.name} from Annapurni Foods!\n\n${product.desc}\n\nPrice: ₹${product.price} for ${product.weight || '250g'}.\n\nProduct Image: ${imageUrl}`;
+    const shareText = `Check out ${product.name} from Annapurni Foods!\n\n${product.desc}\n\nPrice: ₹${product.price} for ${product.weight || '250g'}.`;
     const shareUrl = 'https://annapurni-foods.vercel.app';
     
     try {
       if (navigator.share) {
+        let shareData = {
+          title: `Annapurni Foods - ${product.name}`,
+          text: shareText,
+          url: shareUrl
+        };
+
         try {
-          await navigator.share({
-            title: `Annapurni Foods - ${product.name}`,
-            text: shareText,
-            url: shareUrl
-          });
+          if (product.image) {
+            const imageUrl = getImageUrl(product.image);
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const ext = product.image.split('.').pop()?.split('?')[0] || 'jpg';
+            const safeName = product.name.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+            const fileName = `${safeName}-Rs${product.price}.${ext}`;
+            const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+            
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              shareData.files = [file];
+            }
+          }
+        } catch (imgErr) {
+          console.log("Could not process image for sharing", imgErr);
+        }
+
+        try {
+          await navigator.share(shareData);
           return;
         } catch (shareErr) {
           if (shareErr.name === 'AbortError') {
@@ -139,7 +158,7 @@ const Home = () => {
         throw new Error('Native share not supported');
       }
     } catch (err) {
-      // Fallback to WhatsApp
+      // Fallback to WhatsApp natively without ugly raw image links
       const waText = `${shareText}\n\nOrder here: ${shareUrl}`;
       const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
       window.open(waUrl, '_blank');
