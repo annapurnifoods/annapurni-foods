@@ -117,7 +117,7 @@ const Home = () => {
     e.stopPropagation();
     
     const shareText = `Check out ${product.name} from Annapurni Foods!\n\n${product.desc}\n\nPrice: ₹${product.price} for ${product.weight || '250g'}.`;
-    const shareUrl = 'https://annapurni-foods.vercel.app';
+    const shareUrl = 'https://annapurni-foods.vercel.app/#products';
     
     try {
       if (navigator.share) {
