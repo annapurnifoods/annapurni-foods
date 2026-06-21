@@ -131,9 +131,8 @@ const Home = () => {
         try {
           if (product.image) {
             const imageUrl = getImageUrl(product.image);
-            // Append a timestamp to bypass any strict CORS caching issues
-            const fetchUrl = imageUrl.includes('?') ? `${imageUrl}&t=${Date.now()}` : `${imageUrl}?t=${Date.now()}`;
-            const response = await fetch(fetchUrl, { mode: 'cors', cache: 'no-cache' });
+            // Fetch normally so it resolves instantly from browser cache (prevents transient activation timeout)
+            const response = await fetch(imageUrl, { mode: 'cors' });
             
             if (response.ok) {
               const blob = await response.blob();
