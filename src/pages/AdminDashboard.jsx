@@ -308,8 +308,10 @@ const AdminDashboard = () => {
     setUploading(true);
     try {
       const url = await uploadImage(file);
-      setSettingsData((prev) => ({ ...prev, [fieldName]: url }));
-      alert('Image uploaded successfully!');
+      const newSettings = { ...settingsData, [fieldName]: url };
+      setSettingsData(newSettings);
+      await updateSettings(newSettings);
+      alert('Image uploaded and saved successfully!');
     } catch (err) {
       console.error(err);
       alert('Failed to upload image. Error: ' + (err.message || err));
@@ -1122,9 +1124,15 @@ const AdminDashboard = () => {
                   <input type="text" name="ytEmbed" className="admin-input" placeholder="e.g. dQw4w9WgXcQ" value={settingsData.ytEmbed || ''} onChange={handleSettingsChange} />
                 </div>
 
-                <div style={{gridColumn: '1 / -1', borderTop: '1px dashed rgba(0,0,0,0.1)', paddingTop: '1.25rem', marginTop: '0.5rem'}}>
-                  <h4 style={{fontFamily: "'Playfair Display', serif", color: 'var(--forest)', marginBottom: '0.25rem'}}>🎬 Kitchen Video & Photo Gallery</h4>
-                  <p style={{fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem'}}>Showcase how you prepare your delicacies! Enter a YouTube video link and upload/paste up to three promotional photos.</p>
+                <div style={{gridColumn: '1 / -1', borderTop: '1px dashed rgba(0,0,0,0.1)', paddingTop: '1.25rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem'}}>
+                  <div>
+                    <h4 style={{fontFamily: "'Playfair Display', serif", color: 'var(--forest)', marginBottom: '0.25rem'}}>🎬 Kitchen Video & Photo Gallery</h4>
+                    <p style={{fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem'}}>Showcase how you prepare your delicacies! Enter a YouTube video link and upload/paste up to three promotional photos.</p>
+                  </div>
+                  <label style={{display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--dark)'}}>
+                    <input type="checkbox" name="showKitchenGallery" checked={settingsData.showKitchenGallery !== false} onChange={handleSettingsChange} />
+                    Show in website
+                  </label>
                 </div>
                 <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
                   <label>YouTube Promo / Making Video Link</label>
@@ -1133,21 +1141,21 @@ const AdminDashboard = () => {
                 <div className="admin-form-group">
                   <label>Kitchen Photo 1</label>
                   <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
-                    {settingsData.makingImage1 && <img src={settingsData.makingImage1} alt="K1" style={{width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px'}} />}
+                    {settingsData.makingImage1 && <img src={getImageUrl(settingsData.makingImage1)} alt="K1" onError={(e) => { e.target.src = 'https://via.placeholder.com/30?text=Error'; }} style={{width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px'}} />}
                     <input type="file" accept="image/*" onChange={(e) => handleSettingsImageUpload(e, 'makingImage1')} disabled={uploading} />
                   </div>
                 </div>
                 <div className="admin-form-group">
                   <label>Kitchen Photo 2</label>
                   <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
-                    {settingsData.makingImage2 && <img src={settingsData.makingImage2} alt="K2" style={{width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px'}} />}
+                    {settingsData.makingImage2 && <img src={getImageUrl(settingsData.makingImage2)} alt="K2" onError={(e) => { e.target.src = 'https://via.placeholder.com/30?text=Error'; }} style={{width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px'}} />}
                     <input type="file" accept="image/*" onChange={(e) => handleSettingsImageUpload(e, 'makingImage2')} disabled={uploading} />
                   </div>
                 </div>
                 <div className="admin-form-group" style={{gridColumn: '1 / -1'}}>
                   <label>Kitchen Photo 3</label>
                   <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
-                    {settingsData.makingImage3 && <img src={settingsData.makingImage3} alt="K3" style={{width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px'}} />}
+                    {settingsData.makingImage3 && <img src={getImageUrl(settingsData.makingImage3)} alt="K3" onError={(e) => { e.target.src = 'https://via.placeholder.com/30?text=Error'; }} style={{width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px'}} />}
                     <input type="file" accept="image/*" onChange={(e) => handleSettingsImageUpload(e, 'makingImage3')} disabled={uploading} />
                   </div>
                 </div>

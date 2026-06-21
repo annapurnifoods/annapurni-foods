@@ -115,14 +115,16 @@ const Home = () => {
 
   const handleShare = async (product, e) => {
     e.stopPropagation();
-    const shareText = `Check out ${product.name} from Annapurni Foods! Only ₹${product.price} for ${product.weight || '250g'}.\n\nOrder here: https://annapurni-foods.vercel.app`;
+    const shareText = `Check out ${product.name} from Annapurni Foods!\n\n${product.desc}\n\nPrice: ₹${product.price} for ${product.weight || '250g'}.`;
+    const shareUrl = 'https://annapurni-foods.vercel.app';
     
     try {
       if (navigator.share) {
         let filesArray = [];
         let shareData = {
           title: 'Annapurni Foods',
-          text: shareText
+          text: shareText,
+          url: shareUrl
         };
         
         try {
@@ -146,7 +148,8 @@ const Home = () => {
 
         await navigator.share(shareData);
       } else {
-        const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+        const waText = `${shareText}\n\nOrder here: ${shareUrl}`;
+        const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
         window.open(waUrl, '_blank');
       }
     } catch (err) {
@@ -280,6 +283,39 @@ const Home = () => {
 
   const hasSocialLinks = settings && (settings.instagram || settings.facebook || settings.youtube);
   const hasGallery = settings && (settings.makingVideoUrl || settings.makingImage1 || settings.makingImage2 || settings.makingImage3);
+
+  const renderSocialEmbed = (content) => {
+    if (!content) return null;
+    
+    // Extract the first URL from the content robustly
+    const urlMatch = content.match(/https?:\/\/[^\s"'<>]+/);
+    const rawUrl = urlMatch ? urlMatch[0] : content.trim();
+
+    // Check if it's explicitly an iframe or blockquote (HTML snippet)
+    if (content.includes('<iframe') || content.includes('<blockquote')) {
+      return <div dangerouslySetInnerHTML={{ __html: content }} style={{width: '100%', height: '100%'}} />;
+    }
+
+    // Now process the raw URL
+    if (rawUrl.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i)) {
+      return <img src={rawUrl} alt="Social Embed" style={{width: '100%', borderRadius: '8px', objectFit: 'cover'}} />;
+    } else if (rawUrl.match(/\.(mp4|webm|ogg)(\?.*)?$/i)) {
+      return <video src={rawUrl} controls autoPlay muted loop style={{width: '100%', borderRadius: '8px'}} />;
+    } else if (rawUrl.includes('instagram.com')) {
+      const match = rawUrl.match(/instagram\.com\/(p|reel)\/([A-Za-z0-9_-]+)/);
+      if (match) {
+        return <iframe src={`https://www.instagram.com/${match[1]}/${match[2]}/embed`} width="100%" height="400" frameBorder="0" scrolling="no" allowTransparency="true" allowFullScreen></iframe>;
+      }
+    } else if (rawUrl.includes('facebook.com')) {
+      return <iframe src={`https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(rawUrl)}&show_text=true&width=350`} width="100%" height="400" style={{border:'none',overflow:'hidden'}} scrolling="no" frameBorder="0" allowFullScreen={true} allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>;
+    }
+    
+    if (rawUrl.startsWith('http')) {
+      return <iframe src={rawUrl} width="100%" height="400" frameBorder="0" allowFullScreen></iframe>;
+    }
+
+    return <div dangerouslySetInnerHTML={{ __html: content }} style={{width: '100%', height: '100%'}} />;
+  };
 
   return (
     <>
@@ -567,7 +603,7 @@ const Home = () => {
       </section>
 
       {/* KITCHEN MEDIA GALLERY */}
-      {hasGallery && (
+      {hasGallery && settings.showKitchenGallery !== false && (
         <section className="kitchen-gallery-section" id="gallery">
           <div className="gallery-inner">
             <div className="gallery-header">
@@ -603,7 +639,7 @@ const Home = () => {
                 <div className="gallery-images-container">
                   {settings.makingImage1 && (
                     <div className="gallery-img-card">
-                      <img src={settings.makingImage1} alt="Fresh Ingredients Sourced Daily" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.style.background = 'var(--forest)'; }} />
+                      <img src={getImageUrl(settings.makingImage1)} alt="Fresh Ingredients Sourced Daily" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.style.background = 'var(--forest)'; }} />
                       <div className="img-overlay">
                         <span>🍃 Fresh Ingredients Sourced Daily</span>
                       </div>
@@ -611,7 +647,7 @@ const Home = () => {
                   )}
                   {settings.makingImage2 && (
                     <div className="gallery-img-card">
-                      <img src={settings.makingImage2} alt="Traditional Grinding Mortar" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.style.background = 'var(--forest)'; }} />
+                      <img src={getImageUrl(settings.makingImage2)} alt="Traditional Grinding Mortar" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.style.background = 'var(--forest)'; }} />
                       <div className="img-overlay">
                         <span>🏺 Traditional Grinding Mortar</span>
                       </div>
@@ -619,7 +655,7 @@ const Home = () => {
                   )}
                   {settings.makingImage3 && (
                     <div className="gallery-img-card">
-                      <img src={settings.makingImage3} alt="Safe & Hygienic Jar Packaging" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.style.background = 'var(--forest)'; }} />
+                      <img src={getImageUrl(settings.makingImage3)} alt="Safe & Hygienic Jar Packaging" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.style.background = 'var(--forest)'; }} />
                       <div className="img-overlay">
                         <span>📦 Safe & Hygienic Jar Packaging</span>
                       </div>
@@ -730,10 +766,14 @@ const Home = () => {
               {(settings.instaEmbed || settings.fbEmbed || settings.ytEmbed) && (
                 <div className="social-embeds-grid" style={{display: 'flex', gap: '2rem', justifyContent: 'center', marginTop: '3rem', flexWrap: 'wrap'}}>
                   {settings.instaEmbed && (
-                    <div className="social-embed-card" style={{flex: '1 1 300px', maxWidth: '350px', background: 'var(--cream)', padding: '1rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)'}} dangerouslySetInnerHTML={{__html: settings.instaEmbed}} />
+                    <div className="social-embed-card" style={{flex: '1 1 300px', maxWidth: '350px', background: 'var(--cream)', padding: '1rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)'}}>
+                      {renderSocialEmbed(settings.instaEmbed)}
+                    </div>
                   )}
                   {settings.fbEmbed && (
-                    <div className="social-embed-card" style={{flex: '1 1 300px', maxWidth: '350px', background: 'var(--cream)', padding: '1rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)'}} dangerouslySetInnerHTML={{__html: settings.fbEmbed}} />
+                    <div className="social-embed-card" style={{flex: '1 1 300px', maxWidth: '350px', background: 'var(--cream)', padding: '1rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)'}}>
+                      {renderSocialEmbed(settings.fbEmbed)}
+                    </div>
                   )}
                   {settings.ytEmbed && (
                     <div className="social-embed-card" style={{flex: '1 1 300px', maxWidth: '350px', background: 'var(--cream)', padding: '1rem', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)'}}>
