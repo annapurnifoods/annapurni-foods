@@ -127,41 +127,47 @@ const Home = () => {
           url: shareUrl
         };
 
+        // Try to attach the image file natively
         try {
           if (product.image) {
             const imageUrl = getImageUrl(product.image);
-            const response = await fetch(imageUrl);
-            const blob = await response.blob();
-            const ext = product.image.split('.').pop()?.split('?')[0] || 'jpg';
-            const safeName = product.name.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-            const fileName = `${safeName}-Rs${product.price}.${ext}`;
-            const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+            // Append a timestamp to bypass any strict CORS caching issues
+            const fetchUrl = imageUrl.includes('?') ? `${imageUrl}&t=${Date.now()}` : `${imageUrl}?t=${Date.now()}`;
+            const response = await fetch(fetchUrl, { mode: 'cors', cache: 'no-cache' });
             
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-              shareData.files = [file];
+            if (response.ok) {
+              const blob = await response.blob();
+              // Force standard jpeg format to guarantee compatibility with native share targets (like WhatsApp)
+              const file = new File([blob], 'product-image.jpg', { type: 'image/jpeg' });
+              
+              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                shareData.files = [file];
+              }
             }
           }
         } catch (imgErr) {
-          console.log("Could not process image for sharing", imgErr);
+          console.log("Could not process image for native sharing", imgErr);
         }
 
         try {
           await navigator.share(shareData);
-          return;
+          return; // Successfully shared!
         } catch (shareErr) {
           if (shareErr.name === 'AbortError') {
-            return; // User cancelled, do nothing
+            return; // User intentionally closed the share menu
           }
-          throw new Error('Native share failed or lost transient activation');
+          console.log("Native share failed, falling back...", shareErr);
+          throw new Error('Native share failed');
         }
       } else {
-        throw new Error('Native share not supported');
+        throw new Error('Native share not supported on this browser');
       }
     } catch (err) {
-      // Fallback to WhatsApp natively without ugly raw image links
+      // Fallback: If native share fails (e.g. lost user gesture), redirect to WhatsApp directly.
+      // We use location.href because window.open() gets blocked by popup blockers if user gesture is lost.
       const waText = `${shareText}\n\nOrder here: ${shareUrl}`;
       const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
-      window.open(waUrl, '_blank');
+      window.location.href = waUrl;
     }
   };
 
