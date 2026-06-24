@@ -375,6 +375,24 @@ const AdminDashboard = () => {
       itemsText += `\n${index + 1}. ${item.name} (${item.weight}) x ${item.quantity} - ₹${item.price * item.quantity}`;
     });
 
+    let statusMessage = '';
+    switch (order.status) {
+      case 'Pending':
+        statusMessage = "Hello! Unga order receive pannitom, ippo athu ready pannitu irukom. Konjam wait pannunga, thank you!";
+        break;
+      case 'Delivered':
+        statusMessage = "Hello! Unga order ready aayiduchu, delivery person kitta kuduthutom. Seekiram unga address-ku vanthurum.";
+        break;
+      case 'Completed':
+        statusMessage = "Hello! Unga order deliver aayiduchu. Engakitta purchase pannathukku romba nandri! Enjoy!";
+        break;
+      case 'Cancelled':
+        statusMessage = "Hello! Unga order cancel aayiduchu. Ethavathu doubt iruntha enga kitta contact pannunga.";
+        break;
+      default:
+        statusMessage = "Your order has been updated.";
+    }
+
     return `==============================\n` +
       `       ANNAPURNI FOODS       \n` +
       `   Tambaram, Chennai, 600073  \n` +
@@ -387,9 +405,9 @@ const AdminDashboard = () => {
       `Items Ordered: ${itemsText}\n` +
       `------------------------------\n` +
       `Total Paid: ₹${order.totalAmount}\n` +
-      `Order Status: Completed (Fulfilled)\n` +
+      `Order Status: ${order.status}\n` +
       `==============================\n` +
-      `Your order has been completed and dispatched! Thank you for ordering traditional homemade love. 🌿🍚`;
+      statusMessage;
   };
 
   const sendBillToWhatsApp = (order) => {
